@@ -21,7 +21,7 @@ public class Match {
     int goalHome;
     int goalGuest;
     String teamGuest;
-    ArrayList<Player> players;
+    ArrayList<Player> players = new ArrayList<>();
     String stadium;
     String refere;
     String matchTransfer;

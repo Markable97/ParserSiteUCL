@@ -17,7 +17,15 @@ public class Player {
     int height;
     int weight;
     String post;
-    String birthday;    
+    String birthday;
+    int games;
+    int goal;
+    int assist;
+    int yellow;
+    int red;
+    int penalty;
+    int penaltyOut;
+    int ownGoal;    
 
     public Player(String teamName, String name, String urlName) {
         this.teamName = teamName;
@@ -27,8 +35,10 @@ public class Player {
 
     @Override
     public String toString() {
-        return "Player{" + "teamName=" + teamName + ", name=" + name + ", urlName=" + urlName + '}' + "\n";
+        return "Player{" + "teamName=" + teamName + ", name=" + name + ", urlName=" + urlName + ", height=" + height + ", goal=" + goal + 
+                ", assist=" + assist + ", yellow=" + yellow + ", red=" + red + ", penalty=" + penalty + '}' + "\n";
     }
-    
+
+
     
 }

@@ -38,6 +38,7 @@ public class ParserSiteUCL {
         //Elements matches = doc.select("div.games-list__game-time");
         Elements trs = doc.getElementsByAttribute("data-match");
         System.out.println(trs.size());
+        int i = 1;
         for(Element tr : trs){
             Element div = tr.selectFirst("div.games-list__game-time");
             Element a = div.select("a").first();
@@ -49,7 +50,10 @@ public class ParserSiteUCL {
             matches.add(match);
             System.out.println("id = " + idMatch + " url = " + urlMatch);
             System.out.println(matches.toString());
-            break;
+            if(i == 2){
+                break;
+            }
+            i++;
         }
     }
     /*01.10, 22:10*/
@@ -65,7 +69,8 @@ public class ParserSiteUCL {
     }
     
     static void parsingMatchStatistic(Match match) throws IOException{
-        String teamHome, teamGuest, strDate, strScore, strInfo;
+        String teamHome, teamGuest, strScore, strInfo;
+        ArrayList<Player> players = new ArrayList<>();
         Document doc = Jsoup.connect(match.urlMatch).get();
         Element divMain = doc.selectFirst("div.nogame-info.nogame-info__match-page");
         Element divLeft = divMain.selectFirst("div.nogame-info__left-part");
@@ -80,16 +85,142 @@ public class ParserSiteUCL {
         teamGuest = divRight.selectFirst("div.nogame-info__team-name").text();
         match.teamHome = teamHome;
         match.teamGuest = teamGuest;
-        if(match.matchTransfer.isEmpty()){
+        if(match.matchTransfer.equals("")){
            Element divTeams = doc.selectFirst("div.match-page__composition");
+           //Хозяева
            Element divHome = divTeams.selectFirst("div.match-page__first-team-composition");
            Elements divsHomePlayer = divHome.select("div.first-team-composition__item");
-           for(Element p : divsHomePlayer){
-               
-           }
+           parsingSquad(divsHomePlayer, teamHome, players);
+           //Гости
            Element divGuest = divTeams.selectFirst("div.match-page__second-team-composition");
            Elements divsGuestPlayer = divGuest.select("div.first-team-composition__item");
+           parsingSquad(divsGuestPlayer, teamGuest, players);
+           //Дейсвтия игроков (Голы и Ассисты)
+           Element divDoing = doc.selectFirst("div.match-page--doing__block");
+           parsingDoingGoalAndAssist(divDoing, players);
+           //Действия игроков (Карточки)
+           divDoing = doc.selectFirst("div.match-page--doing match-page--doing__punishment");
+           parsingDoingPunishment(divDoing, players);
+           match.players.addAll(players);
         }
+    }
+    
+    static void parsingDoingPunishment(Element divDoing, ArrayList<Player> players){
+        Element info = divDoing.selectFirst("div.match-page--doing__block");
+        if(info != null){
+            Element divHome = info.selectFirst("div.match-page--doing__items__left-part");
+            Element divGuest = info.selectFirst("div.match-page--doing__items__right-part");
+            //Хозяева
+            Elements divItemHome = divHome.select("div.match-page--doing__item.clearfix");
+            for(Element div : divItemHome){
+                
+            }
+            //Гости
+            Elements divItemGuest = divGuest.getElementsByClass("match-page--doing__item match-page--doing__item__right clearfix");
+            for(Element div : divItemGuest){
+                Element  = div.selectFirst("");
+            }
+        }
+    }
+    
+    static void parsingDoingGoalAndAssist(Element divDoing, ArrayList<Player> players){
+        Element divHome = divDoing.selectFirst("div.match-page--doing__items__left-part");
+        Element divGuest = divDoing.selectFirst("div.match-page--doing__items__right-part");
+        //Голы и Асисты
+        //Хозяева
+        Elements divItemHome = divHome.select("div.match-page--doing__item.clearfix");
+        for(Element div : divItemHome){
+            Element info = div.selectFirst("div.match-page--doing__item--names");
+            Element goal = info.getAllElements().first().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-1 ");
+            if (goal != null){
+                Element goalType = div.selectFirst("div.match-page--doing__item--score-image");
+                String type = goalType.selectFirst("a").attr("title");
+                String name = goal.text();
+                String urlName = goal.attr("abs:href");
+                findPlayer(players, urlName, type);
+                System.out.print(type + " = " + goal.text());
+            }
+            Element assist = info.getAllElements().last().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-2");
+            if (assist != null){
+                String name = assist.text();
+                String urlName = assist.attr("abs:href");
+                if(name.length() > 0){
+                    findPlayer(players, urlName, "Асист");
+                    System.out.println(" Assist = " + name);
+                }else{
+                    System.out.println();
+                }
+            }
+            
+        }
+        //Гости
+        Elements divItemGuest = divGuest.getElementsByClass("match-page--doing__item match-page--doing__item__right clearfix");
+        for(Element div : divItemGuest){
+            Element info = div.selectFirst("div.match-page--doing__item--names");
+            Element goal = info.getAllElements().first().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-1 ");
+            if (goal != null){
+                Element goalType = div.selectFirst("div.match-page--doing__item--score-image");
+                String type = goalType.selectFirst("a").attr("title");
+                String name = goal.text();
+                String urlName = goal.attr("abs:href");
+                findPlayer(players, urlName, type);
+                System.out.print(type + " = " + goal.text());
+            }
+            Element assist = info.getAllElements().last().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-2");
+            if (assist != null){
+                String name = assist.text();
+                String urlName = assist.attr("abs:href");
+                if(name.length() > 0){
+                    findPlayer(players, urlName, "Асист");
+                    System.out.println(" Assist = " + name);
+                }else{
+                    System.out.println();
+                } 
+            }
+        }
+        //Карточки
+        Element 
+    }
+    static void findPlayer(ArrayList<Player> players, String urlName, String typeDoing){
+        for(Player p : players){
+            if(p.urlName.equals(urlName)){
+                switch(typeDoing){
+                    case "Гол": 
+                        p.goal = p.goal + 1;
+                        break;
+                    case "Реализованный 10-ти метровый штрафной удар":
+                        p.penalty = p.penalty + 1;
+                        break;
+                    case "Асист":
+                        p.assist = p.assist + 1;
+                        break;
+                    case "Желтая карточка":
+                        p.yellow = p.yellow + 1;
+                        break;
+                    case "Вторая желтая карточка":
+                        p.yellow = p.yellow + 1;
+                        break;
+                }
+                break;
+            }
+        }
+    }
+    static void parsingSquad(Elements divsPlayer, String teamName, ArrayList<Player> players){
+        String urlName, name;
+        for(Element p : divsPlayer){
+            Element playerInfo = p.selectFirst("div.first-team-composition__player-name");
+            name = playerInfo.text();
+            urlName = playerInfo.select("a").attr("abs:href");
+            Player player = new Player(teamName, name, urlName);
+            Element amplua = p.selectFirst("div.first-team-composition__player-role");
+            Element a = amplua.getElementsByTag("a").first();
+            if(a!=null){
+                player.amplua = "Вратарь";
+            }else{
+                player.amplua = "Полевой игрок";
+            }
+            players.add(player);
+        }        
     }
     /*Дивизион "A". Тур 1. Поле №1.*/
     static void parsingInfoMatch(Match match, String str){
@@ -108,6 +239,7 @@ public class ParserSiteUCL {
             match.matchTransfer = "Техническое поражение";
         }else{
             match.goalGuest = Integer.parseInt(strMain[1].trim());
+            match.matchTransfer = "";
         }
         
     }
