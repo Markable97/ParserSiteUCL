@@ -25,10 +25,11 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException{
         System.out.println("Начало парсинга");
-        //parsingTournamenttable();
-        //parsingPlayersTeam();
-        //System.out.println(teamsAll.toString());
-        parsingMatches();
+        parsingTournamenttable();
+        parsingPlayersTeam();
+        System.out.println(divisions.toString());
+        System.out.println(teamsAll.toString());
+       // parsingMatches();
     }
     
     static void parsingMatches() throws IOException{
@@ -45,16 +46,17 @@ public class ParserSiteUCL {
             int idMatch = Integer.parseInt(tr.attr("data-match")); 
             String urlMatch = a.attr("abs:href");
             String dateMatch = parsingDate(tr.selectFirst("td.schedule--date").text());
+            System.out.println("id = " + idMatch + " url = " + urlMatch);
             Match match = new Match(idMatch, urlMatch, dateMatch);
             parsingMatchStatistic(match);
             matches.add(match);
-            System.out.println("id = " + idMatch + " url = " + urlMatch);
-            System.out.println(matches.toString());
-            if(i == 2){
+            /*if(i == 10){
                 break;
             }
-            i++;
+            i++;*/
         }
+        System.out.println("Кол-во матчей" + matches.size());
+        System.out.println(matches.toString());
     }
     /*01.10, 22:10*/
     static String parsingDate(String str){
@@ -99,88 +101,107 @@ public class ParserSiteUCL {
            Element divDoing = doc.selectFirst("div.match-page--doing__block");
            parsingDoingGoalAndAssist(divDoing, players);
            //Действия игроков (Карточки)
-           divDoing = doc.selectFirst("div.match-page--doing match-page--doing__punishment");
+           divDoing = doc.selectFirst("div.match-page--doing.match-page--doing__punishment");
            parsingDoingPunishment(divDoing, players);
            match.players.addAll(players);
         }
     }
     
     static void parsingDoingPunishment(Element divDoing, ArrayList<Player> players){
-        Element info = divDoing.selectFirst("div.match-page--doing__block");
-        if(info != null){
-            Element divHome = info.selectFirst("div.match-page--doing__items__left-part");
-            Element divGuest = info.selectFirst("div.match-page--doing__items__right-part");
-            //Хозяева
-            Elements divItemHome = divHome.select("div.match-page--doing__item.clearfix");
-            for(Element div : divItemHome){
-                
-            }
-            //Гости
-            Elements divItemGuest = divGuest.getElementsByClass("match-page--doing__item match-page--doing__item__right clearfix");
-            for(Element div : divItemGuest){
-                Element  = div.selectFirst("");
+        if(divDoing != null){
+            Element info = divDoing.selectFirst("div.match-page--doing__block");
+            if(info != null){
+                Element divHome = info.selectFirst("div.match-page--doing__items__left-part");
+                Element divGuest = info.selectFirst("div.match-page--doing__items__right-part");
+                //Хозяева
+                Elements divItemHome = divHome.getElementsByClass("match-page--doing__item clearfix");
+                for(Element div : divItemHome){
+                   Element nameInfo = div.selectFirst("div.match-page--doing__item-name-1"); 
+                    if(nameInfo != null){
+                        Element n = nameInfo.getElementsByTag("a").first();
+                        String urlName = n.attr("abs:href");
+                        String name = n.text();
+                        String type = div.selectFirst("div.match-page--doing__item--score").getElementsByTag("a").attr("title");
+                        System.out.println(type + ": " + name);
+                        findPlayer(players, urlName, type);
+                    }
+                }
+                //Гости
+                Elements divItemGuest = divGuest.getElementsByClass("match-page--doing__item match-page--doing__item__right clearfix");
+                for(Element div : divItemGuest){
+                   Element nameInfo = div.selectFirst("div.match-page--doing__item-name-1"); 
+                    if(nameInfo != null){
+                        Element n = nameInfo.getElementsByTag("a").first();
+                        String urlName = n.attr("abs:href");
+                        String name = n.text();
+                        String type = div.selectFirst("div.match-page--doing__item--score").getElementsByTag("a").attr("title");
+                        System.out.println(type + ": " + name);
+                        findPlayer(players, urlName, type);
+                    }
+                }
             }
         }
     }
     
     static void parsingDoingGoalAndAssist(Element divDoing, ArrayList<Player> players){
-        Element divHome = divDoing.selectFirst("div.match-page--doing__items__left-part");
-        Element divGuest = divDoing.selectFirst("div.match-page--doing__items__right-part");
-        //Голы и Асисты
-        //Хозяева
-        Elements divItemHome = divHome.select("div.match-page--doing__item.clearfix");
-        for(Element div : divItemHome){
-            Element info = div.selectFirst("div.match-page--doing__item--names");
-            Element goal = info.getAllElements().first().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-1 ");
-            if (goal != null){
-                Element goalType = div.selectFirst("div.match-page--doing__item--score-image");
-                String type = goalType.selectFirst("a").attr("title");
-                String name = goal.text();
-                String urlName = goal.attr("abs:href");
-                findPlayer(players, urlName, type);
-                System.out.print(type + " = " + goal.text());
+        if(divDoing != null){
+            Element divHome = divDoing.selectFirst("div.match-page--doing__items__left-part");
+            Element divGuest = divDoing.selectFirst("div.match-page--doing__items__right-part");
+            //Голы и Асисты
+            //Хозяева
+            Elements divItemHome = divHome.select("div.match-page--doing__item.clearfix");
+            for(Element div : divItemHome){
+                Element info = div.selectFirst("div.match-page--doing__item--names");
+                Element goal = info.getAllElements().first().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-1 ");
+                if (goal != null){
+                    Element goalType = div.selectFirst("div.match-page--doing__item--score-image");
+                    String type = goalType.selectFirst("a").attr("title");
+                    String name = goal.text();
+                    String urlName = goal.attr("abs:href");
+                    findPlayer(players, urlName, type);
+                    System.out.print(type + " = " + goal.text());
+                }
+                Element assist = info.getAllElements().last().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-2");
+                if (assist != null){
+                    String name = assist.text();
+                    String urlName = assist.attr("abs:href");
+                    if(name.length() > 0){
+                        findPlayer(players, urlName, "Асист");
+                        System.out.println(" Assist = " + name);
+                    }else{
+                        System.out.println();
+                    }
+                }
+
             }
-            Element assist = info.getAllElements().last().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-2");
-            if (assist != null){
-                String name = assist.text();
-                String urlName = assist.attr("abs:href");
-                if(name.length() > 0){
-                    findPlayer(players, urlName, "Асист");
-                    System.out.println(" Assist = " + name);
-                }else{
-                    System.out.println();
+            //Гости
+            Elements divItemGuest = divGuest.getElementsByClass("match-page--doing__item match-page--doing__item__right clearfix");
+            for(Element div : divItemGuest){
+                Element info = div.selectFirst("div.match-page--doing__item--names");
+                Element goal = info.getAllElements().first().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-1 ");
+                if (goal != null){
+                    Element goalType = div.selectFirst("div.match-page--doing__item--score-image");
+                    String type = goalType.selectFirst("a").attr("title");
+                    String name = goal.text();
+                    String urlName = goal.attr("abs:href");
+                    findPlayer(players, urlName, type);
+                    System.out.print(type + " = " + goal.text());
+                }
+                Element assist = info.getAllElements().last().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-2");
+                if (assist != null){
+                    String name = assist.text();
+                    String urlName = assist.attr("abs:href");
+                    if(name.length() > 0){
+                        findPlayer(players, urlName, "Асист");
+                        System.out.println(" Assist = " + name);
+                    }else{
+                        System.out.println();
+                    } 
                 }
             }
-            
         }
-        //Гости
-        Elements divItemGuest = divGuest.getElementsByClass("match-page--doing__item match-page--doing__item__right clearfix");
-        for(Element div : divItemGuest){
-            Element info = div.selectFirst("div.match-page--doing__item--names");
-            Element goal = info.getAllElements().first().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-1 ");
-            if (goal != null){
-                Element goalType = div.selectFirst("div.match-page--doing__item--score-image");
-                String type = goalType.selectFirst("a").attr("title");
-                String name = goal.text();
-                String urlName = goal.attr("abs:href");
-                findPlayer(players, urlName, type);
-                System.out.print(type + " = " + goal.text());
-            }
-            Element assist = info.getAllElements().last().getElementsByTag("a").first();//selectFirst("div.match-page--doing__item-name-2");
-            if (assist != null){
-                String name = assist.text();
-                String urlName = assist.attr("abs:href");
-                if(name.length() > 0){
-                    findPlayer(players, urlName, "Асист");
-                    System.out.println(" Assist = " + name);
-                }else{
-                    System.out.println();
-                } 
-            }
-        }
-        //Карточки
-        Element 
     }
+    
     static void findPlayer(ArrayList<Player> players, String urlName, String typeDoing){
         for(Player p : players){
             if(p.urlName.equals(urlName)){
@@ -200,11 +221,15 @@ public class ParserSiteUCL {
                     case "Вторая желтая карточка":
                         p.yellow = p.yellow + 1;
                         break;
+                    case "Красная карточка":
+                        p.red = p.red + 1;
+                        break;
                 }
                 break;
             }
         }
     }
+    
     static void parsingSquad(Elements divsPlayer, String teamName, ArrayList<Player> players){
         String urlName, name;
         for(Element p : divsPlayer){
@@ -243,6 +268,7 @@ public class ParserSiteUCL {
         }
         
     }
+    
     static void parsingPlayersTeam() throws IOException{
         for(Team t : teamsAll){
             ArrayList<Player> players = new ArrayList<>();
