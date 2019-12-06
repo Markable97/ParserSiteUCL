@@ -33,9 +33,16 @@ public class Player {
         this.urlName = urlName;
     }
 
+    public Player(String teamName, String name, String urlName, String amplua) {
+        this.teamName = teamName;
+        this.name = name;
+        this.urlName = urlName;
+        this.amplua = amplua;
+    }
+    
     @Override
     public String toString() {
-        return "Player{" + "teamName=" + teamName + ", name=" + name + ", urlName=" + urlName + ", height=" + height + ", goal=" + goal + 
+        return "Player{" + "teamName=" + teamName + ", name=" + name + ", urlName=" + urlName + ", amplua=" + amplua + ", goal=" + goal + 
                 ", assist=" + assist + ", yellow=" + yellow + ", red=" + red + ", penalty=" + penalty + '}' + "\n";
     }
 

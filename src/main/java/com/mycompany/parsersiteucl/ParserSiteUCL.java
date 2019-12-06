@@ -7,6 +7,7 @@ package com.mycompany.parsersiteucl;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,17 +24,39 @@ public class ParserSiteUCL {
     static ArrayList<TournamentTable> divisions = new ArrayList<>();
     static ArrayList<Match> matches = new ArrayList<>();
     
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
         parsingTournamenttable();
-        parsingPlayersTeam();
-        System.out.println(divisions.toString());
+        //parsingPlayersTeam();
+        //System.out.println(divisions.toString());
+        //DBRequest dbr = new DBRequest();
+        //dbr.insertTeamAndPlayerAndTournamentUpdate(divisions);
         System.out.println(teamsAll.toString());
-       // parsingMatches();
+        /*parsingMatches();
+        dbr.insertMatchesAndDoingPlayers(matches);*/
+        downloadPictures();
+    }
+    
+    static void downloadPictures() throws InterruptedException{
+        MyThreadPicture myThread = null;
+        //ArrayList<MyThreadPicture> list = new ArrayList<>();
+        int cnt = teamsAll.size();
+        int i = 1;
+        for(Team t : teamsAll){
+            if(i >= cnt - 16){
+                myThread = new MyThreadPicture(t);
+                myThread.start();
+                //list.add(myThread);
+                //myThread.join();
+                //Thread.sleep(1000);
+            }
+            i++;
+        }
+        myThread.join();
     }
     
     static void parsingMatches() throws IOException{
-        File input = new File("C:\\Users\\m.glushko\\Desktop\\Новая папка (2)\\test.html");
+        File input = new File("C:\\Users\\march\\OneDrive\\Рабочий стол\\test.html");
         //Document doc = Jsoup.connect("http://football.businesschampions.ru/osen-2019/raspisanie-chempionata/").get();
         Document doc = Jsoup.parse(input, "UTF-8");
         //Elements matches = doc.select("div.games-list__game-time");
@@ -41,6 +64,10 @@ public class ParserSiteUCL {
         System.out.println(trs.size());
         int i = 1;
         for(Element tr : trs){
+            //Element divInfoTeam = tr.selectFirst("td.schedule-game-score");
+            Elements aTeam = tr.getElementsByTag("a");
+            String teamHome = aTeam.get(0).text();
+            String teamGuest = aTeam.get(2).text();
             Element div = tr.selectFirst("div.games-list__game-time");
             Element a = div.select("a").first();
             int idMatch = Integer.parseInt(tr.attr("data-match")); 
@@ -48,12 +75,14 @@ public class ParserSiteUCL {
             String dateMatch = parsingDate(tr.selectFirst("td.schedule--date").text());
             System.out.println("id = " + idMatch + " url = " + urlMatch);
             Match match = new Match(idMatch, urlMatch, dateMatch);
+            match.teamHome = teamHome;
+            match.teamGuest = teamGuest;
             parsingMatchStatistic(match);
             matches.add(match);
-            /*if(i == 10){
+            /*if(i == 2){
                 break;
-            }
-            i++;*/
+            }*/
+            i++;
         }
         System.out.println("Кол-во матчей" + matches.size());
         System.out.println(matches.toString());
@@ -76,7 +105,7 @@ public class ParserSiteUCL {
         Document doc = Jsoup.connect(match.urlMatch).get();
         Element divMain = doc.selectFirst("div.nogame-info.nogame-info__match-page");
         Element divLeft = divMain.selectFirst("div.nogame-info__left-part");
-        teamHome = divLeft.selectFirst("div.nogame-info__team-name").text();
+        teamHome = match.teamHome;//divLeft.selectFirst("div.nogame-info__team-name").text();
         Element divCentre = divMain.selectFirst("div.nogame-info__center-part");
         //strDate = divCentre.selectFirst("div.nogame-info__match-name").text();
         strInfo = divCentre.selectFirst("div.nogame-info__match-stadium").text();
@@ -84,9 +113,9 @@ public class ParserSiteUCL {
         strScore = divCentre.selectFirst("div.nogame-score").text();
         parsingScore(match, strScore);
         Element divRight = divMain.selectFirst("div.nogame-info__right-part");
-        teamGuest = divRight.selectFirst("div.nogame-info__team-name").text();
-        match.teamHome = teamHome;
-        match.teamGuest = teamGuest;
+        teamGuest = match.teamGuest;//divRight.selectFirst("div.nogame-info__team-name").text();
+        //match.teamHome = teamHome;
+        //match.teamGuest = teamGuest;
         if(match.matchTransfer.equals("")){
            Element divTeams = doc.selectFirst("div.match-page__composition");
            //Хозяева
@@ -99,7 +128,7 @@ public class ParserSiteUCL {
            parsingSquad(divsGuestPlayer, teamGuest, players);
            //Дейсвтия игроков (Голы и Ассисты)
            Element divDoing = doc.selectFirst("div.match-page--doing__block");
-           parsingDoingGoalAndAssist(divDoing, players);
+           parsingDoingGoalAndAssist(divDoing, players, teamHome, teamGuest);
            //Действия игроков (Карточки)
            divDoing = doc.selectFirst("div.match-page--doing.match-page--doing__punishment");
            parsingDoingPunishment(divDoing, players);
@@ -143,7 +172,8 @@ public class ParserSiteUCL {
         }
     }
     
-    static void parsingDoingGoalAndAssist(Element divDoing, ArrayList<Player> players){
+    static void parsingDoingGoalAndAssist(Element divDoing, ArrayList<Player> players, String teamHome, 
+            String teamGuest){
         if(divDoing != null){
             Element divHome = divDoing.selectFirst("div.match-page--doing__items__left-part");
             Element divGuest = divDoing.selectFirst("div.match-page--doing__items__right-part");
@@ -158,6 +188,9 @@ public class ParserSiteUCL {
                     String type = goalType.selectFirst("a").attr("title");
                     String name = goal.text();
                     String urlName = goal.attr("abs:href");
+                    if(type.equals("Автогол")){
+                        urlName = "Автогол " + teamHome;
+                    }
                     findPlayer(players, urlName, type);
                     System.out.print(type + " = " + goal.text());
                 }
@@ -184,6 +217,9 @@ public class ParserSiteUCL {
                     String type = goalType.selectFirst("a").attr("title");
                     String name = goal.text();
                     String urlName = goal.attr("abs:href");
+                    if(type.equals("Автогол")){
+                        urlName = "Автогол " + teamGuest;
+                    }
                     findPlayer(players, urlName, type);
                     System.out.print(type + " = " + goal.text());
                 }
@@ -224,6 +260,10 @@ public class ParserSiteUCL {
                     case "Красная карточка":
                         p.red = p.red + 1;
                         break;
+                    case "Автогол":
+                        p.ownGoal = p.ownGoal + 1;
+                        break;
+                    
                 }
                 break;
             }
@@ -245,7 +285,8 @@ public class ParserSiteUCL {
                 player.amplua = "Полевой игрок";
             }
             players.add(player);
-        }        
+        }
+        players.add(new Player(teamName, "Автогол " + teamName, "Автогол " + teamName, "Автогол"));
     }
     /*Дивизион "A". Тур 1. Поле №1.*/
     static void parsingInfoMatch(Match match, String str){

@@ -26,7 +26,7 @@ public class Team {
 
     @Override
     public String toString() {
-        return "Team{" + "teamName=" + teamName + ", nameDivision=" + nameDivision + ", urlName=" + urlName + ", players=" + players.toString() + '}';
+        return "Team{" + "teamName=" + teamName + ", nameDivision=" + nameDivision + ", urlName=" + urlName + ", players=" + players.toString() + '}' + "\n";
     }
 
     
