@@ -26,15 +26,106 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        parsingTournamenttable();
+        parsingCalendar();
+        //parsingTournamenttable();
         //parsingPlayersTeam();
         //System.out.println(divisions.toString());
         //DBRequest dbr = new DBRequest();
         //dbr.insertTeamAndPlayerAndTournamentUpdate(divisions);
-        System.out.println(teamsAll.toString());
+        //System.out.println(teamsAll.toString());
         /*parsingMatches();
         dbr.insertMatchesAndDoingPlayers(matches);*/
-        downloadPictures();
+        //downloadPictures();
+    }
+      
+    static void parsingCalendar() throws IOException{
+        File input = new File("D:\\Загрузки\\calendar.html");
+        Document doc = Jsoup.parse(input, "UTF-8");
+        Elements schedules = doc.select("div.schedule__unit.js-calendar-matches-header");
+        System.out.println(schedules.size());
+        ArrayList<MatchLocal> mathes = new ArrayList<>();
+        for(Element schedule : schedules) {
+            String date = schedule.selectFirst("div.schedule__head").text();
+            String dateStr =  parserTime(date);
+            System.out.println("time = " + dateStr);
+            Elements matchLi = schedule.select("li.schedule__matches-item.js-calendar-match");
+            for(Element match : matchLi){
+                MatchLocal matchLocal = parserMatch(match);
+                System.out.println(matchLocal.toString());
+                matchLocal.date = dateStr;
+                mathes.add(matchLocal);
+            }
+        }
+        DBRequest dbr = new DBRequest();
+        dbr.addedMatches(mathes);
+        
+       
+    }
+    
+    static class MatchLocal{
+        String date;
+        String time;
+        String teamHome;
+        String teamGuest;
+        String tour;
+
+        public MatchLocal(String time, String teamHome, String teamGuest, String tour) {
+            this.time = time;
+            this.teamHome = teamHome;
+            this.teamGuest = teamGuest;
+            this.tour = tour;
+        }
+
+        @Override
+        public String toString() {
+            return "MatchLocal{" + "time=" + time + ", teamHome=" + teamHome + ", teamGuest=" + teamGuest + ", tour=" + tour + '}';
+        }
+       
+    }
+    
+    static MatchLocal parserMatch(Element match){
+        String time = match.selectFirst("span.schedule__time").text();
+        String teamhome = match.selectFirst("a.schedule__team-1").text();
+        String teamGuest = match.selectFirst("a.schedule__team-2").text();
+        String tour = match.selectFirst("span.schedule__tour-main").text();
+        MatchLocal parserMatch = new MatchLocal(time, teamhome, teamGuest, tour);
+        return parserMatch;
+    }
+    
+//    time = 10 декабря, суббота
+//    time = 17 декабря, суббота
+//    time = 24 декабря, суббота
+//    time = 14 января 2023, суббота
+//    time = 21 января 2023, суббота
+//    time = 28 января 2023, суббота
+//    time = 4 февраля 2023, суббота
+//    time = 11 февраля 2023, суббота
+//    time = 18 февраля 2023, суббота
+//    time = 25 февраля 2023, суббота
+//    time = 4 марта 2023, суббота
+    
+    static String parserTime(String time){
+        String[] parts = time.split(",");
+        String[] partsTime = parts[0].split(" ");
+        String returnStr;
+        if(partsTime.length == 2) {
+            returnStr = partsTime[0] + getNumberMonth(partsTime[1]) + "2022";
+        } else {
+            returnStr = partsTime[0] + getNumberMonth(partsTime[1]) + partsTime[2];
+        }
+        return returnStr;
+    }
+    
+    static String getNumberMonth(String month){
+        String number;
+        switch(month){
+            case "декабря": number = ".12."; break;
+            case "января": number = ".01."; break;
+            case "февраля": number = ".02."; break;
+            case "марта": number = ".03.";break;
+            default: number = ""; break;
+        };
+        return number;
     }
     
     static void downloadPictures() throws InterruptedException{

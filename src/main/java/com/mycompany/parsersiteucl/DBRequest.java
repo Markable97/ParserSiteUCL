@@ -23,7 +23,7 @@ public class DBRequest {
     
     String user = "root";
     String password = "7913194";
-    String url = "jdbc:mysql://localhost:3306/football_main_ucl";
+    String url = "jdbc:mysql://localhost:3306/sport_community";
     Connection connect;
     PreparedStatement preparedStatement;
     PreparedStatement preparedStatementPlayer;
@@ -71,7 +71,45 @@ public class DBRequest {
     public DBRequest(){
         try {
             this.connect = DriverManager.getConnection(url, user, password);
+            connect.setAutoCommit(false);
         } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    void addedMatches(ArrayList<ParserSiteUCL.MatchLocal> matches){
+        String sqlAddMatch = "INSERT INTO `match` (tournament_id, team_home, team_guest, tour, played) " +
+                                "select  5,\n" +
+                                "(select id from team where league_id = 2 and team_name = ?) as team_home,\n" +
+                                "(select id from team where league_id = 2 and team_name = ?) as team_guest,\n" +
+                                "? as tour, 1";
+        String sqlAddSchedule = "INSERT INTO `schedule` (stadium_id, league_id, game_date, match_id)\n" +
+                                "VALUES (3, 2, ?, ?)";
+        try{
+            int match_id = 19;
+            for(ParserSiteUCL.MatchLocal match : matches){
+                preparedStatement = connect.prepareStatement(sqlAddMatch);
+                preparedStatement.setString(1, match.teamHome);
+                preparedStatement.setString(2, match.teamGuest);
+                preparedStatement.setString(3, match.tour);
+                try{
+                    preparedStatement.executeUpdate();
+                    match_id++;
+                    preparedStatementPlayer = connect.prepareStatement(sqlAddSchedule);
+                    System.out.println(match.date+" "+match.time);
+                    preparedStatementPlayer.setString(1, match.date+" "+match.time);
+                    preparedStatementPlayer.setLong(2, match_id);
+                    preparedStatementPlayer.executeUpdate();
+                    connect.commit();
+                }catch(SQLException ex){
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    connect.rollback();
+                    break; 
+                }
+                
+            }
+            connect.commit();
+        }catch(SQLException ex){
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
