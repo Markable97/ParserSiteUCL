@@ -26,7 +26,8 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        parsingCalendar();
+        parserSquad();
+        //parsingCalendar();
         //parsingTournamenttable();
         //parsingPlayersTeam();
         //System.out.println(divisions.toString());
@@ -37,7 +38,41 @@ public class ParserSiteUCL {
         dbr.insertMatchesAndDoingPlayers(matches);*/
         //downloadPictures();
     }
-      
+    
+    
+    
+    static void parserSquad() throws IOException{
+        File input = new File("D:\\Загрузки\\squad.html");
+        Document doc = Jsoup.parse(input, "UTF-8");
+        Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
+        Elements rows = table.select("tr.table__row");
+        ArrayList<Player> players = new ArrayList<>();
+        for(Element row : rows){
+            Player player = new Player();
+            player.amplua = row.selectFirst("td.table__cell.table__cell--amplua.table__cell--amplua").text();
+            player.name = row.selectFirst("td.table__cell.table__cell--player").text();
+            String playerUrl = row.selectFirst("td.table__cell.table__cell--player").getElementsByClass("table__player").attr("href").split("f-league.ru")[1];
+            player.urlName = playerUrl;
+            player.urlPictures = getImageUrl(playerUrl,row.selectFirst("td.table__cell.table__cell--player"));
+            player.birthday = getBithday(row.selectFirst("td.table__cell.table__cell--middle.mobile-hide").text());
+            players.add(player);
+            System.out.println(player.toString());
+        }
+        DBRequest dbr = new DBRequest();
+        dbr.addedPlayers(16, players);
+    }
+    
+    static String getImageUrl(String player_url,Element element){
+        String imageUrl = element.selectFirst("img.table__player-img").attr("src");
+        imageUrl = imageUrl.replace("./squad_files/", "/photo/");
+        imageUrl = imageUrl.replace("_60x60", "_thumb");
+        return "https://st.joinsport.io" + player_url + imageUrl;
+    }
+    
+    static String getBithday(String str){
+        return str.split(",")[0];
+    }
+    
     static void parsingCalendar() throws IOException{
         File input = new File("D:\\Загрузки\\calendar.html");
         Document doc = Jsoup.parse(input, "UTF-8");

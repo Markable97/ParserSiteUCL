@@ -13,6 +13,7 @@ public class Player {
     String teamName;
     String name;
     String urlName;
+    String urlPictures;
     String amplua;
     int height;
     int weight;
@@ -39,13 +40,16 @@ public class Player {
         this.urlName = urlName;
         this.amplua = amplua;
     }
-    
-    @Override
-    public String toString() {
-        return "Player{" + "teamName=" + teamName + ", name=" + name + ", urlName=" + urlName + ", amplua=" + amplua + ", goal=" + goal + 
-                ", assist=" + assist + ", yellow=" + yellow + ", red=" + red + ", penalty=" + penalty + '}' + "\n";
+
+    Player() {
     }
 
+    @Override
+    public String toString() {
+        return "Player{" + "name=" + name + ", urlName=" + urlName + ", urlPictures=" + urlPictures + ", amplua=" + amplua + ", birthday=" + birthday + '}';
+    }
+    
+    
 
     
 }

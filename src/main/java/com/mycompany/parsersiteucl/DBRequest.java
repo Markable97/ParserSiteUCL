@@ -77,6 +77,46 @@ public class DBRequest {
         }
     }
     
+    void addedPlayers(int team_id, ArrayList<Player> players){
+        String sqlInsertPLayer = "INSERT INTO player (league_id, name, surname, birthday, amplua_id, player_url, image_url)"
+                + "SELECT 2, ?, ?, ?, (select id from amplua where short_name = ?), ?, ?";
+        String sqlInsertSqua = "INSERT INTO squad_actual (player_id, team_id)" +
+                "SELECT `AUTO_INCREMENT` - 1, ?\n" +
+                "FROM  INFORMATION_SCHEMA.TABLES\n" +
+                "WHERE TABLE_NAME   = 'player';";
+        try{
+            for(Player p : players){
+                preparedStatement = connect.prepareStatement(sqlInsertPLayer);
+                String[] name = p.name.split(" ");
+                preparedStatement.setString(1, name[1]);
+                preparedStatement.setString(2, name[0]);
+                preparedStatement.setString(3, p.birthday);
+                String amplua;
+                if (p.amplua.isBlank()){
+                    amplua = "Ун..";
+                } else {
+                    amplua = p.amplua;
+                }
+                preparedStatement.setString(4, amplua);
+                preparedStatement.setString(5, p.urlName);
+                preparedStatement.setString(6, p.urlPictures);
+                try{
+                    preparedStatement.executeUpdate();
+                    preparedStatementPlayer = connect.prepareStatement(sqlInsertSqua);
+                    preparedStatementPlayer.setInt(1, team_id);
+                    preparedStatementPlayer.executeUpdate();
+                    connect.commit();
+                }catch(SQLException ex){
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    connect.rollback();
+                    break; 
+                }
+            }           
+        } catch(SQLException ex){
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     void addedMatches(ArrayList<ParserSiteUCL.MatchLocal> matches){
         String sqlAddMatch = "INSERT INTO `match` (tournament_id, team_home, team_guest, tour, played) " +
                                 "select  5,\n" +
