@@ -26,8 +26,9 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
+        parserActionInMatch();
         //parserSquad();
-        parsingCalendar();
+        //parsingCalendar();
         //parsingTournamenttable();
         //parsingPlayersTeam();
         //System.out.println(divisions.toString());
@@ -39,6 +40,63 @@ public class ParserSiteUCL {
         //downloadPictures();
     }
     
+    
+    
+    static void parserActionInMatch() throws IOException{
+        DBRequest dbr = new DBRequest();
+        ArrayList<Match> matches = dbr.getMatchesForParser("1 тур");
+        for(Match m : matches){
+            System.out.println(m.urlMatch);
+            Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();
+            Element divProtocol = doc.getElementById("match-protocol");
+            Element ulHome = divProtocol.selectFirst("ul.match-protocol__team.match-protocol__team--left");
+            Element ulGuest = divProtocol.selectFirst("ul.match-protocol__team.match-protocol__team--right");
+            ArrayList<Player> playersHome = getPlayers(ulHome.select("a.match-protocol__member-name"));
+            ArrayList<Player> playersGuest = getPlayers(ulGuest.select("a.match-protocol__member-name"));
+            Element divEvents = doc.getElementById("match-events");
+            ArrayList<Action> actions = new ArrayList<>();
+            Elements liActions = divEvents.select("li.vertical-timeline__event-item");
+            if(liActions != null){
+                actions.addAll(getAction(liActions));
+            };
+            dbr.addPlayerAction(m, playersHome, playersGuest, actions);
+        }
+        
+    }
+    
+    static ArrayList<Action> getAction(Elements divTime){
+        ArrayList<Action> list = new ArrayList<>();
+        Elements liActions = divTime.select("li.vertical-timeline__event-item");
+        for(Element e : liActions){
+            String time = e.selectFirst("div.vertical-timeline__event-minute").text().trim();
+            String action = e.selectFirst("div.event-item").attr("title");
+            String authorUrl = e.selectFirst("a.vertical-timeline__event-author").attr("href");
+            Element aAssist = e.selectFirst("a.vertical-timeline__event-assist");
+            String assistUrl = null;
+            if(aAssist != null){
+                assistUrl = aAssist.attr("href");
+            }
+            Action actionAdd = new Action(authorUrl, assistUrl, time, action);
+//            System.out.println(actionAdd.toString());
+            list.add(actionAdd);
+        }
+        return list;
+    }
+    
+    static ArrayList<Player> getPlayers(Elements elements){
+        System.out.println("Команда");
+        ArrayList<Player> list = new ArrayList<>();
+        for(Element e : elements){
+            String playerUrl = e.attr("href");
+            String playerName = e.text();
+            System.out.println(playerUrl + " " + playerName);
+            Player player = new Player();
+            player.urlName = playerUrl;
+            player.name = playerName;
+            list.add(player);
+        }
+        return list;
+    }
     
     
     static void parserSquad() throws IOException{

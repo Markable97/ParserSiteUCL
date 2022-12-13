@@ -18,9 +18,11 @@ public class Match {
     String division;
     int tour;
     String teamHome;
+    int teamHomeId;
     int goalHome;
     int goalGuest;
     String teamGuest;
+    int teamGusetId;
     ArrayList<Player> players = new ArrayList<>();
     String stadium;
     String refere;
@@ -30,6 +32,9 @@ public class Match {
         this.idmatch = idmatch;
         this.urlMatch = urlMatch;
         this.dateMatch = dateMatch;
+    }
+
+    Match() {
     }
 
     @Override

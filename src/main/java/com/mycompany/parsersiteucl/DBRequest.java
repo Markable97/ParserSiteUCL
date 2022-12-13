@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,6 +76,122 @@ public class DBRequest {
         } catch (SQLException ex) {
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    private void addActionGoal(int match_id, String player_url, String player_assist_url, String time) throws SQLException{
+        String sql_dop;
+        if(player_assist_url == null){
+            sql_dop = ", ?";
+        } else {
+            sql_dop = ", (select id from player where player_url = ?) ";
+        }
+        String sql = "call addActionGoal("
+                + "? "
+                + ",(select id from player where player_url = ?) "
+                + sql_dop
+                + ",?)";
+        preparedStatement = connect.prepareStatement(sql);
+        preparedStatement.setInt(1, match_id);
+        preparedStatement.setString(2, player_url);
+        if(player_assist_url == null){
+            preparedStatement.setNull(3, Types.INTEGER);
+        } else {
+            preparedStatement.setString(3, player_assist_url);
+        }
+        preparedStatement.setString(4, time);
+        preparedStatement.execute();
+    }
+    
+    public void addPlayerAction(Action action, int match_id) throws SQLException{
+        if (action.action.equals("Гол")){
+            //Обрабатываем только гол
+            addActionGoal(match_id, action.urlPlayer,action.urlAssist, action.time);
+        } else {
+            String sql;
+            switch(action.action){
+                case "Пенальти": sql = "call addActionPenalty(?, (select id from player where player_url = ?), ?)"; break;
+                case "Автогол": sql = "call addActionOwnGoal(?, (select id from player where player_url = ?), ?)"; break;
+                case "Жёлтая карточка": sql = "call addActionYellowCard(?, (select id from player where player_url = ?), ?)"; break;
+                case "Красная карточка": sql = "call addActionRedCard(?, (select id from player where player_url = ?), ?)"; break;
+                default: sql = "call addActionPenaltyOut(?, (select id from player where player_url = ?), ?)"; break;
+            }
+            preparedStatement = connect.prepareStatement(sql);
+            preparedStatement.setInt(1, match_id);
+            preparedStatement.setString(2, action.urlPlayer);
+            preparedStatement.setString(3, action.time);
+            preparedStatement.execute();
+        }
+    }
+    
+    
+    void addPlayerAction(Match m, ArrayList<Player> playersHome, ArrayList<Player> playersGuest,  ArrayList<Action> actions) {
+        String sqlInsertProtocol = "insert into player_in_match (match_id, player_id, team_id) "
+                + "select ?, p.id, ? "
+                + " from player p "
+                + " where p.player_url = ? ";
+        try{
+            for(Player p : playersHome){
+                preparedStatement = connect.prepareStatement(sqlInsertProtocol);
+                preparedStatement.setInt(1, m.idmatch);
+                preparedStatement.setInt(2, m.teamHomeId);
+                preparedStatement.setString(3, p.urlName);
+                try{
+                    preparedStatement.execute();
+                }catch (SQLException ex) {
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    connect.rollback();
+                }
+            }
+            for(Player p : playersGuest){
+                preparedStatement = connect.prepareStatement(sqlInsertProtocol);
+                preparedStatement.setInt(1, m.idmatch);
+                preparedStatement.setInt(2, m.teamGusetId);
+                preparedStatement.setString(3, p.urlName);
+                try{
+                    preparedStatement.execute();
+                }catch (SQLException ex) {
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    connect.rollback();
+                }
+            }
+            for(Action a :  actions){
+                try{
+                    System.out.println(a.toString());
+                    addPlayerAction(a, m.idmatch);
+                  
+                }catch(SQLException ex) {
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    connect.rollback();
+                    break;
+                }
+            }
+            connect.commit();
+        }catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
+    }
+    
+    ArrayList<Match> getMatchesForParser(String tour){
+        ArrayList<Match> matches = new ArrayList<>();
+        String sql = "select id, match_url, team_home, team_guest from `match` where tour = ? and id = 23";
+        try {
+            preparedStatement = connect.prepareStatement(sql);
+            preparedStatement.setString(1, tour);
+            resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                Match match = new Match();
+                match.idmatch = resultSet.getInt("id");
+                match.urlMatch = resultSet.getString("match_url");
+                match.teamHomeId = resultSet.getInt("team_home");
+                match.teamGusetId = resultSet.getInt("team_guest");
+                matches.add(match);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return matches;
     }
     
     void addedPlayers(int team_id, ArrayList<Player> players){
