@@ -26,8 +26,8 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        parserSquad();
-        //parsingCalendar();
+        //parserSquad();
+        parsingCalendar();
         //parsingTournamenttable();
         //parsingPlayersTeam();
         //System.out.println(divisions.toString());
@@ -92,7 +92,7 @@ public class ParserSiteUCL {
             }
         }
         DBRequest dbr = new DBRequest();
-        dbr.addedMatches(mathes);
+        dbr.updateScore(mathes);
         
        
     }
@@ -103,6 +103,9 @@ public class ParserSiteUCL {
         String teamHome;
         String teamGuest;
         String tour;
+        String url;
+        String goalsHome;
+        String goalsGuest;
 
         public MatchLocal(String time, String teamHome, String teamGuest, String tour) {
             this.time = time;
@@ -113,8 +116,10 @@ public class ParserSiteUCL {
 
         @Override
         public String toString() {
-            return "MatchLocal{" + "time=" + time + ", teamHome=" + teamHome + ", teamGuest=" + teamGuest + ", tour=" + tour + '}';
+            return "MatchLocal{" + "date=" + date + ", time=" + time + ", teamHome=" + teamHome + ", teamGuest=" + teamGuest + ", tour=" + tour + ", url=" + url + ", goalsHome=" + goalsHome + ", goalsGuest=" + goalsGuest + '}';
         }
+
+        
        
     }
     
@@ -122,8 +127,13 @@ public class ParserSiteUCL {
         String time = match.selectFirst("span.schedule__time").text();
         String teamhome = match.selectFirst("a.schedule__team-1").text();
         String teamGuest = match.selectFirst("a.schedule__team-2").text();
+        String url = match.selectFirst("a.schedule__score").attr("href");
         String tour = match.selectFirst("span.schedule__tour-main").text();
+        String[] score = match.selectFirst("div.schedule__score-main").text().split(":");
         MatchLocal parserMatch = new MatchLocal(time, teamhome, teamGuest, tour);
+        parserMatch.url = url.replace("https://f-league.ru", "");
+        parserMatch.goalsHome = score[0].trim();        
+        parserMatch.goalsGuest = score[1].trim();        
         return parserMatch;
     }
     

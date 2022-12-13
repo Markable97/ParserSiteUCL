@@ -117,6 +117,52 @@ public class DBRequest {
         }
     }
     
+    void updateScore(ArrayList<ParserSiteUCL.MatchLocal> matches){
+        String updateScore = "call matchAddResult((select id from `match` where match_url = ?), ?, ?);;";
+        for(ParserSiteUCL.MatchLocal match : matches){
+            try{
+                if(!match.goalsHome.equals("-")){
+                    try{
+                       int goalsHome = Integer.parseInt(match.goalsHome);
+                       int goalsGuest = Integer.parseInt(match.goalsGuest);
+                       try {
+                            preparedStatement = connect.prepareStatement(updateScore);
+                            preparedStatement.setString(1, match.url);
+                            preparedStatement.setInt(2, goalsHome);
+                            preparedStatement.setInt(3, goalsGuest);
+                            preparedStatement.executeUpdate();
+                            connect.commit();
+                        } catch (SQLException ex) {
+                            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }catch(NumberFormatException ex){
+                        connect.rollback();
+                        break;
+                    }
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    void updateUrl(ArrayList<ParserSiteUCL.MatchLocal> matches){
+        String updateUrl = "update `match` "
+                + "set match_url = ? "
+                + "where id = (select match_id from `schedule` where league_id = 2 and game_date = ?)";
+        for(ParserSiteUCL.MatchLocal match : matches){
+            try {
+                preparedStatement = connect.prepareStatement(updateUrl);
+                preparedStatement.setString(1, match.url);
+                preparedStatement.setString(2, match.date+" "+match.time);
+                preparedStatement.executeUpdate();
+                connect.commit();
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
     void addedMatches(ArrayList<ParserSiteUCL.MatchLocal> matches){
         String sqlAddMatch = "INSERT INTO `match` (tournament_id, team_home, team_guest, tour, played) " +
                                 "select  5,\n" +
