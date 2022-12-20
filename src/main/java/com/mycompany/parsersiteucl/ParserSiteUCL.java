@@ -29,7 +29,7 @@ public class ParserSiteUCL {
         System.out.println("Начало парсинга");
         //dopParserPlayer();
         parsingCalendar();
-        parserActionInMatch();
+//        parserActionInMatch();
         //parserSquad();
         //parsingCalendar();
         //parsingTournamenttable();
@@ -173,7 +173,7 @@ public class ParserSiteUCL {
             }
         }
         DBRequest dbr = new DBRequest();
-        dbr.updateScore(mathes);
+        dbr.addedMatches(mathes);
         
        
     }
@@ -182,7 +182,9 @@ public class ParserSiteUCL {
         String date;
         String time;
         String teamHome;
+        String teamHomeUrl;
         String teamGuest;
+        String teamGuestUrl;
         String tour;
         String url;
         String goalsHome;
@@ -207,14 +209,18 @@ public class ParserSiteUCL {
     static MatchLocal parserMatch(Element match){
         String time = match.selectFirst("span.schedule__time").text();
         String teamhome = match.selectFirst("a.schedule__team-1").text();
+        String teamHomeUrl = match.selectFirst("a.schedule__team-1").attr("href").replace("https://f-league.ru/tournament/1027402/teams/application?","");
         String teamGuest = match.selectFirst("a.schedule__team-2").text();
+        String teamGuestUrl = match.selectFirst("a.schedule__team-2").attr("href").replace("https://f-league.ru/tournament/1027402/teams/application?","");
         String url = match.selectFirst("a.schedule__score").attr("href");
         String tour = match.selectFirst("span.schedule__tour-main").text();
         String[] score = match.selectFirst("div.schedule__score-main").text().split(":");
         MatchLocal parserMatch = new MatchLocal(time, teamhome, teamGuest, tour);
         parserMatch.url = url.replace("https://f-league.ru", "");
         parserMatch.goalsHome = score[0].trim();        
-        parserMatch.goalsGuest = score[1].trim();        
+        parserMatch.goalsGuest = score[1].trim();
+        parserMatch.teamHomeUrl = teamHomeUrl;
+        parserMatch.teamGuestUrl = teamGuestUrl;
         return parserMatch;
     }
     

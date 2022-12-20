@@ -308,33 +308,32 @@ public class DBRequest {
     }
     
     void addedMatches(ArrayList<ParserSiteUCL.MatchLocal> matches){
-        String sqlAddMatch = "INSERT INTO `match` (tournament_id, team_home, team_guest, tour, played) " +
+        String sqlAddMatch = "INSERT INTO `match` (tournament_id, team_home, team_guest, tour, played, match_url) " +
                                 "select  5,\n" +
-                                "(select id from team where league_id = 2 and team_name = ?) as team_home,\n" +
-                                "(select id from team where league_id = 2 and team_name = ?) as team_guest,\n" +
-                                "? as tour, 1";
+                                "(select id from team where league_id = 2 and team_url = ?) as team_home,\n" +
+                                "(select id from team where league_id = 2 and team_url = ?) as team_guest,\n" +
+                                "? as tour, " + 
+                                "1, " +
+                                "? as match_url";
         String sqlAddSchedule = "INSERT INTO `schedule` (stadium_id, league_id, game_date, match_id)\n" +
-                                "VALUES (3, 2, ?, ?)";
+                                "SELECT 3, 2, ?,`AUTO_INCREMENT` - 1\n" +
+                                "FROM  INFORMATION_SCHEMA.TABLES\n" +
+                                "WHERE TABLE_NAME = 'match';";
         try{
-            int match_id = 19;
             for(ParserSiteUCL.MatchLocal match : matches){
                 preparedStatement = connect.prepareStatement(sqlAddMatch);
-                preparedStatement.setString(1, match.teamHome);
-                preparedStatement.setString(2, match.teamGuest);
+                preparedStatement.setString(1, match.teamHomeUrl);
+                preparedStatement.setString(2, match.teamGuestUrl);
                 preparedStatement.setString(3, match.tour);
+                preparedStatement.setString(4, match.url);
                 try{
                     preparedStatement.executeUpdate();
-                    match_id++;
                     preparedStatementPlayer = connect.prepareStatement(sqlAddSchedule);
                     System.out.println(match.date+" "+match.time);
                     preparedStatementPlayer.setString(1, match.date+" "+match.time);
-                    preparedStatementPlayer.setLong(2, match_id);
                     preparedStatementPlayer.executeUpdate();
-                    connect.commit();
                 }catch(SQLException ex){
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
-                    connect.rollback();
-                    break; 
                 }
                 
             }
