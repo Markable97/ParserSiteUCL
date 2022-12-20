@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,6 +27,8 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
+        //dopParserPlayer();
+        parsingCalendar();
         parserActionInMatch();
         //parserSquad();
         //parsingCalendar();
@@ -41,10 +44,26 @@ public class ParserSiteUCL {
     }
     
     
-    
-    static void parserActionInMatch() throws IOException{
+    static void dopParserPlayer() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
-        ArrayList<Match> matches = dbr.getMatchesForParser("1 тур");
+        ArrayList<Team> teams = dbr.getTeamWithCountPlayers();
+        for(Team t : teams){
+            System.out.println("---------------" + t.teamName + " -------------------");
+            TimeUnit.SECONDS.sleep(2);
+            ArrayList<Player> players = parserSquad(false, t.urlName);
+            System.out.println(players.size() + " < " + t.countPlayers);
+            if(players.size() > t.countPlayers){
+                System.out.println("Yes add to db");
+                dbr.addedPlayers(t.urlName, players);
+            }
+            
+        }
+    }
+    
+    
+    static void parserActionInMatch() throws IOException, InterruptedException{
+        DBRequest dbr = new DBRequest();
+        ArrayList<Match> matches = dbr.getMatchesForParser("2 тур");
         for(Match m : matches){
             System.out.println(m.urlMatch);
             Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();
@@ -99,9 +118,10 @@ public class ParserSiteUCL {
     }
     
     
-    static void parserSquad() throws IOException{
-        File input = new File("D:\\Загрузки\\squad.html");
-        Document doc = Jsoup.parse(input, "UTF-8");
+    static ArrayList<Player> parserSquad(boolean addToDB, String urlTeam) throws IOException{
+        //File input = new File("D:\\Загрузки\\squad.html");
+        //Document doc = Jsoup.parse(input, "UTF-8");
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027402/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();
@@ -109,15 +129,18 @@ public class ParserSiteUCL {
             Player player = new Player();
             player.amplua = row.selectFirst("td.table__cell.table__cell--amplua.table__cell--amplua").text();
             player.name = row.selectFirst("td.table__cell.table__cell--player").text();
-            String playerUrl = row.selectFirst("td.table__cell.table__cell--player").getElementsByClass("table__player").attr("href").split("f-league.ru")[1];
+            String playerUrl = row.selectFirst("td.table__cell.table__cell--player").getElementsByClass("table__player").attr("abs:href").split("f-league.ru")[1];
             player.urlName = playerUrl;
             player.urlPictures = getImageUrl(playerUrl,row.selectFirst("td.table__cell.table__cell--player"));
             player.birthday = getBithday(row.selectFirst("td.table__cell.table__cell--middle.mobile-hide").text());
             players.add(player);
             System.out.println(player.toString());
         }
-        DBRequest dbr = new DBRequest();
-        dbr.addedPlayers(16, players);
+        if(addToDB){
+            DBRequest dbr = new DBRequest();
+            dbr.addedPlayers(urlTeam, players);
+        }
+        return players;
     }
     
     static String getImageUrl(String player_url,Element element){

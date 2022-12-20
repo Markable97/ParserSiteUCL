@@ -16,6 +16,7 @@ public class Team {
     String teamName;
     String nameDivision;
     String urlName;
+    int countPlayers;
     ArrayList<Player> players = new ArrayList<>();
     
     public Team(String nameDivision, String teamName,String urlName){
@@ -24,11 +25,17 @@ public class Team {
         this.urlName = urlName;
     }
 
-    @Override
-    public String toString() {
-        return "Team{" + "teamName=" + teamName + ", nameDivision=" + nameDivision + ", urlName=" + urlName + ", players=" + players.toString() + '}' + "\n";
+    public Team(String teamName, String urlName, int countPlayers) {
+        this.teamName = teamName;
+        this.urlName = urlName;
+        this.countPlayers = countPlayers;
     }
 
+    @Override
+    public String toString() {
+        return "Team{" + "teamName=" + teamName + ", nameDivision=" + nameDivision + ", urlName=" + urlName + ", countPlayers=" + countPlayers + ", players=" + players + '}';
+    }
+    
     
     
 }

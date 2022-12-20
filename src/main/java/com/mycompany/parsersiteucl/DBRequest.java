@@ -78,6 +78,35 @@ public class DBRequest {
         }
     }
     
+    public ArrayList<Team> getTeamWithCountPlayers(){
+        ArrayList<Team> teams = new ArrayList<>();
+        try {
+            String sql = " select t.team_name, t.team_url, count(1) cnt\n" +
+                    " from team t, squad_actual sa\n" +
+                    " where t.id = sa.team_id\n" +
+                    " and t.league_id = 2\n" +
+                    " group by t.team_name, t.team_url;";
+            preparedStatement = connect.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                String teamName = resultSet.getString(1);
+                String teamUrl = resultSet.getString(2);
+                int count = resultSet.getInt(3);
+                teams.add(new Team(teamName, teamUrl, count));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally{
+            try {
+                preparedStatement.close();
+                resultSet.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return teams;
+    }
+    
     private void addActionGoal(int match_id, String player_url, String player_assist_url, String time) throws SQLException{
         String sql_dop;
         if(player_assist_url == null){
@@ -174,7 +203,7 @@ public class DBRequest {
     
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
-        String sql = "select id, match_url, team_home, team_guest from `match` where tour = ? and id = 23";
+        String sql = "select id, match_url, team_home, team_guest from `match` where tour = ? ";
         try {
             preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, tour);
@@ -194,11 +223,11 @@ public class DBRequest {
         return matches;
     }
     
-    void addedPlayers(int team_id, ArrayList<Player> players){
+    void addedPlayers(String teamUrl, ArrayList<Player> players){
         String sqlInsertPLayer = "INSERT INTO player (league_id, name, surname, birthday, amplua_id, player_url, image_url)"
                 + "SELECT 2, ?, ?, ?, (select id from amplua where short_name = ?), ?, ?";
         String sqlInsertSqua = "INSERT INTO squad_actual (player_id, team_id)" +
-                "SELECT `AUTO_INCREMENT` - 1, ?\n" +
+                "SELECT `AUTO_INCREMENT` - 1, (select id from team where team_url = ?)\n" +
                 "FROM  INFORMATION_SCHEMA.TABLES\n" +
                 "WHERE TABLE_NAME   = 'player';";
         try{
@@ -220,13 +249,11 @@ public class DBRequest {
                 try{
                     preparedStatement.executeUpdate();
                     preparedStatementPlayer = connect.prepareStatement(sqlInsertSqua);
-                    preparedStatementPlayer.setInt(1, team_id);
+                    preparedStatementPlayer.setString(1, teamUrl);
                     preparedStatementPlayer.executeUpdate();
                     connect.commit();
                 }catch(SQLException ex){
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
-                    connect.rollback();
-                    break; 
                 }
             }           
         } catch(SQLException ex){
