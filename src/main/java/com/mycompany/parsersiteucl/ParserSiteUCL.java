@@ -27,12 +27,12 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        //parserTeam();
+//        parserTeam();
 //        dopParserPlayer();
-          parsingCalendar();
+//          parsingCalendar();
 //        parserActionInMatch();
         //parserSquad();
-        //parsingCalendar();
+        parsingCalendar();
         //parsingTournamenttable();
         //parsingPlayersTeam();
         //System.out.println(divisions.toString());
@@ -46,7 +46,7 @@ public class ParserSiteUCL {
     
     
     static void parserTeam() throws IOException, InterruptedException{
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams").get();
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/teams").get();
         Elements lis = doc.select("li.teams__item");
         ArrayList<Team> teams = new ArrayList<>();
         for(Element li : lis){
@@ -57,12 +57,12 @@ public class ParserSiteUCL {
             team.urlImage = a.getElementsByTag("img").first().attr("src");
             teams.add(team);
        }
-//       DBRequest dbr = new DBRequest();
-//       dbr.addTeams(teams);
-       for(Team t : teams){
-           parserSquad(true, t.urlName);
-           Thread.sleep(2000);
-       }      
+       DBRequest dbr = new DBRequest();
+       dbr.addTeams(teams);
+//       for(Team t : teams){
+//           parserSquad(true, t.urlName);
+//           Thread.sleep(2000);
+//       }      
         
     }
     
@@ -144,7 +144,7 @@ public class ParserSiteUCL {
         //File input = new File("D:\\Загрузки\\squad.html");
         //Document doc = Jsoup.parse(input, "UTF-8");
         System.out.println("-----team " + urlTeam + " --------");
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams/application?"+urlTeam).get();
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();
@@ -196,6 +196,7 @@ public class ParserSiteUCL {
                 matchLocal.date = dateStr;
                 mathes.add(matchLocal);
             }
+            break;
         }
         
         DBRequest dbr = new DBRequest();

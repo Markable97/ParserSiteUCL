@@ -90,6 +90,7 @@ public class DBRequest {
                 preparedStatement.execute();
                 connect.commit();
             }
+            connect.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -101,7 +102,7 @@ public class DBRequest {
             String sql = " select t.team_name, t.team_url, count(1) cnt\n" +
                     " from team t " +
                     " left join squad_actual sa on t.id = sa.team_id \n" +
-                    " where t.league_id = 2 and t.id > 16 \n" +
+                    " where t.league_id = 2 and t.id = 37 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -244,11 +245,10 @@ public class DBRequest {
         String sqlInsertPLayer = "INSERT INTO player (league_id, name, surname, birthday, amplua_id, player_url, image_url)"
                 + "SELECT 2, ?, ?, ?, (select id from amplua where short_name = ?), ?, ?";
         String sqlInsertSqua = "INSERT INTO squad_actual (player_id, team_id)" +
-                "SELECT `AUTO_INCREMENT` - 1, (select id from team where team_url = ?)\n" +
-                "FROM  INFORMATION_SCHEMA.TABLES\n" +
-                "WHERE TABLE_NAME   = 'player';";
-        try{
-            for(Player p : players){
+                "SELECT (select id from player where player_url = ?),(select id from team where team_url = ?)";
+       
+        for(Player p : players){
+            try {
                 preparedStatement = connect.prepareStatement(sqlInsertPLayer);
                 String[] name = p.name.split(" ");
                 preparedStatement.setString(1, name[1]);
@@ -265,17 +265,17 @@ public class DBRequest {
                 preparedStatement.setString(6, p.urlPictures);
                 try{
                     preparedStatement.executeUpdate();
-                    preparedStatementPlayer = connect.prepareStatement(sqlInsertSqua);
-                    preparedStatementPlayer.setString(1, teamUrl);
-                    preparedStatementPlayer.executeUpdate();
-                    connect.commit();
                 }catch(SQLException ex){
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                preparedStatementPlayer = connect.prepareStatement(sqlInsertSqua);
+                preparedStatementPlayer.setString(1, p.urlName);
+                preparedStatementPlayer.setString(2, teamUrl);
+                preparedStatementPlayer.executeUpdate();
+                connect.commit();
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
             }
-            preparedStatement.close();
-        } catch(SQLException ex){
-            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -327,16 +327,14 @@ public class DBRequest {
     
     void addedMatches(ArrayList<ParserSiteUCL.MatchLocal> matches){
         String sqlAddMatch = "INSERT INTO `match` (tournament_id, team_home, team_guest, tour, played, match_url) " +
-                                "select  5,\n" +
+                                "select  7,\n" +
                                 "(select id from team where league_id = 2 and team_url = ?) as team_home,\n" +
                                 "(select id from team where league_id = 2 and team_url = ?) as team_guest,\n" +
                                 "? as tour, " + 
                                 "1, " +
                                 "? as match_url";
         String sqlAddSchedule = "INSERT INTO `schedule` (stadium_id, league_id, game_date, match_id)\n" +
-                                "SELECT 3, 2, ?,`AUTO_INCREMENT` - 1\n" +
-                                "FROM  INFORMATION_SCHEMA.TABLES\n" +
-                                "WHERE TABLE_NAME = 'match';";
+                                "SELECT 6, 2, ?, (select id from `match` where match_url = ?)" ;
         try{
             for(ParserSiteUCL.MatchLocal match : matches){
                 preparedStatement = connect.prepareStatement(sqlAddMatch);
@@ -349,6 +347,7 @@ public class DBRequest {
                     preparedStatementPlayer = connect.prepareStatement(sqlAddSchedule);
                     System.out.println(match.date+" "+match.time);
                     preparedStatementPlayer.setString(1, match.date+" "+match.time);
+                    preparedStatementPlayer.setString(2, match.url);
                     preparedStatementPlayer.executeUpdate();
                 }catch(SQLException ex){
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
