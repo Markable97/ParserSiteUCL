@@ -78,13 +78,30 @@ public class DBRequest {
         }
     }
     
+    void addTeams(ArrayList<Team> teams) {
+        String sql = "insert into team(league_id, team_name, team_url, team_image) "
+                   + "values (2, ?, ?, ?)";
+        try {
+            for(Team t : teams){
+                preparedStatement = connect.prepareStatement(sql);
+                preparedStatement.setString(1, t.teamName);
+                preparedStatement.setString(2, t.urlName);
+                preparedStatement.setString(3, t.urlImage);
+                preparedStatement.execute();
+                connect.commit();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public ArrayList<Team> getTeamWithCountPlayers(){
         ArrayList<Team> teams = new ArrayList<>();
         try {
             String sql = " select t.team_name, t.team_url, count(1) cnt\n" +
-                    " from team t, squad_actual sa\n" +
-                    " where t.id = sa.team_id\n" +
-                    " and t.league_id = 2\n" +
+                    " from team t " +
+                    " left join squad_actual sa on t.id = sa.team_id \n" +
+                    " where t.league_id = 2 and t.id > 16 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -255,7 +272,8 @@ public class DBRequest {
                 }catch(SQLException ex){
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }           
+            }
+            preparedStatement.close();
         } catch(SQLException ex){
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -27,8 +27,9 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        //dopParserPlayer();
-        parsingCalendar();
+        //parserTeam();
+//        dopParserPlayer();
+          parsingCalendar();
 //        parserActionInMatch();
         //parserSquad();
         //parsingCalendar();
@@ -43,6 +44,27 @@ public class ParserSiteUCL {
         //downloadPictures();
     }
     
+    
+    static void parserTeam() throws IOException, InterruptedException{
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams").get();
+        Elements lis = doc.select("li.teams__item");
+        ArrayList<Team> teams = new ArrayList<>();
+        for(Element li : lis){
+            Team team = new Team();
+            team.teamName = li.attr("title");
+            Element a =li.selectFirst("a.teams__logo");
+            team.urlName = a.attr("href").split("application")[1].replace("?", "");
+            team.urlImage = a.getElementsByTag("img").first().attr("src");
+            teams.add(team);
+       }
+//       DBRequest dbr = new DBRequest();
+//       dbr.addTeams(teams);
+       for(Team t : teams){
+           parserSquad(true, t.urlName);
+           Thread.sleep(2000);
+       }      
+        
+    }
     
     static void dopParserPlayer() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
@@ -121,33 +143,36 @@ public class ParserSiteUCL {
     static ArrayList<Player> parserSquad(boolean addToDB, String urlTeam) throws IOException{
         //File input = new File("D:\\Загрузки\\squad.html");
         //Document doc = Jsoup.parse(input, "UTF-8");
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027402/teams/application?"+urlTeam).get();
+        System.out.println("-----team " + urlTeam + " --------");
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();
-        for(Element row : rows){
-            Player player = new Player();
-            player.amplua = row.selectFirst("td.table__cell.table__cell--amplua.table__cell--amplua").text();
-            player.name = row.selectFirst("td.table__cell.table__cell--player").text();
-            String playerUrl = row.selectFirst("td.table__cell.table__cell--player").getElementsByClass("table__player").attr("abs:href").split("f-league.ru")[1];
-            player.urlName = playerUrl;
-            player.urlPictures = getImageUrl(playerUrl,row.selectFirst("td.table__cell.table__cell--player"));
-            player.birthday = getBithday(row.selectFirst("td.table__cell.table__cell--middle.mobile-hide").text());
-            players.add(player);
-            System.out.println(player.toString());
-        }
-        if(addToDB){
-            DBRequest dbr = new DBRequest();
-            dbr.addedPlayers(urlTeam, players);
+        if(rows.size() > 1){
+            for(Element row : rows){
+                Player player = new Player();
+                player.amplua = row.selectFirst("td.table__cell.table__cell--amplua.table__cell--amplua").text();
+                player.name = row.selectFirst("td.table__cell.table__cell--player").text();
+                String playerUrl = row.selectFirst("td.table__cell.table__cell--player").getElementsByClass("table__player").attr("abs:href").split("f-league.ru")[1];
+                player.urlName = playerUrl;
+                player.urlPictures = getImageUrl(row.selectFirst("td.table__cell.table__cell--player"));
+                player.birthday = getBithday(row.selectFirst("td.table__cell.table__cell--middle.mobile-hide").text());
+                players.add(player);
+                System.out.println(player.toString());
+            }
+            if(addToDB){
+                DBRequest dbr = new DBRequest();
+                dbr.addedPlayers(urlTeam, players);
+            }
         }
         return players;
     }
     
-    static String getImageUrl(String player_url,Element element){
+    static String getImageUrl(Element element){
         String imageUrl = element.selectFirst("img.table__player-img").attr("src");
         imageUrl = imageUrl.replace("./squad_files/", "/photo/");
         imageUrl = imageUrl.replace("_60x60", "_thumb");
-        return "https://st.joinsport.io" + player_url + imageUrl;
+        return imageUrl;
     }
     
     static String getBithday(String str){
@@ -172,6 +197,7 @@ public class ParserSiteUCL {
                 mathes.add(matchLocal);
             }
         }
+        
         DBRequest dbr = new DBRequest();
         dbr.addedMatches(mathes);
         
@@ -209,9 +235,9 @@ public class ParserSiteUCL {
     static MatchLocal parserMatch(Element match){
         String time = match.selectFirst("span.schedule__time").text();
         String teamhome = match.selectFirst("a.schedule__team-1").text();
-        String teamHomeUrl = match.selectFirst("a.schedule__team-1").attr("href").replace("https://f-league.ru/tournament/1027402/teams/application?","");
+        String teamHomeUrl = match.selectFirst("a.schedule__team-1").attr("href").split("/application?")[1].replace("?","");
         String teamGuest = match.selectFirst("a.schedule__team-2").text();
-        String teamGuestUrl = match.selectFirst("a.schedule__team-2").attr("href").replace("https://f-league.ru/tournament/1027402/teams/application?","");
+        String teamGuestUrl = match.selectFirst("a.schedule__team-2").attr("href").split("/application?")[1].replace("?","");
         String url = match.selectFirst("a.schedule__score").attr("href");
         String tour = match.selectFirst("span.schedule__tour-main").text();
         String[] score = match.selectFirst("div.schedule__score-main").text().split(":");

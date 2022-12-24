@@ -16,8 +16,13 @@ public class Team {
     String teamName;
     String nameDivision;
     String urlName;
+    String urlImage;
     int countPlayers;
     ArrayList<Player> players = new ArrayList<>();
+    
+    public Team(){
+        
+    }
     
     public Team(String nameDivision, String teamName,String urlName){
         this.nameDivision = nameDivision;
@@ -33,8 +38,12 @@ public class Team {
 
     @Override
     public String toString() {
-        return "Team{" + "teamName=" + teamName + ", nameDivision=" + nameDivision + ", urlName=" + urlName + ", countPlayers=" + countPlayers + ", players=" + players + '}';
+        return "Team{" + "teamName=" + teamName + ", nameDivision=" + nameDivision + ", urlName=" + urlName + ", urlImage=" + urlImage + ", countPlayers=" + countPlayers + ", players=" + players + '}';
     }
+
+
+
+    
     
     
     
