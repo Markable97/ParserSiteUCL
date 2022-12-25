@@ -30,9 +30,9 @@ public class ParserSiteUCL {
 //        parserTeam();
 //        dopParserPlayer();
 //          parsingCalendar();
-//        parserActionInMatch();
+        parserActionInMatch();
         //parserSquad();
-        parsingCalendar();
+//        parsingCalendar();
         //parsingTournamenttable();
         //parsingPlayersTeam();
         //System.out.println(divisions.toString());
@@ -85,7 +85,7 @@ public class ParserSiteUCL {
     
     static void parserActionInMatch() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
-        ArrayList<Match> matches = dbr.getMatchesForParser("2 тур");
+        ArrayList<Match> matches = dbr.getMatchesForParser("3 тур");
         for(Match m : matches){
             System.out.println(m.urlMatch);
             Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();
@@ -144,7 +144,7 @@ public class ParserSiteUCL {
         //File input = new File("D:\\Загрузки\\squad.html");
         //Document doc = Jsoup.parse(input, "UTF-8");
         System.out.println("-----team " + urlTeam + " --------");
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/teams/application?"+urlTeam).get();
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027402/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();
@@ -196,11 +196,11 @@ public class ParserSiteUCL {
                 matchLocal.date = dateStr;
                 mathes.add(matchLocal);
             }
-            break;
         }
         
         DBRequest dbr = new DBRequest();
-        dbr.addedMatches(mathes);
+        //dbr.addedMatches(mathes);
+        dbr.updateScore(mathes);
         
        
     }

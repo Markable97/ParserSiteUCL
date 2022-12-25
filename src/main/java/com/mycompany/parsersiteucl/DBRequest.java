@@ -101,8 +101,9 @@ public class DBRequest {
         try {
             String sql = " select t.team_name, t.team_url, count(1) cnt\n" +
                     " from team t " +
+                    " join tournamnet_team tt on t.id = tt.team_id " +
                     " left join squad_actual sa on t.id = sa.team_id \n" +
-                    " where t.league_id = 2 and t.id = 37 \n" +
+                    " where t.league_id = 2 and tt.tournament_id = 5 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -150,7 +151,7 @@ public class DBRequest {
     }
     
     public void addPlayerAction(Action action, int match_id) throws SQLException{
-        if (action.action.equals("Гол")){
+        if (action.action.equals("Гол") || action.action.equals("Стандарт")){
             //Обрабатываем только гол
             addActionGoal(match_id, action.urlPlayer,action.urlAssist, action.time);
         } else {
@@ -221,7 +222,7 @@ public class DBRequest {
     
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
-        String sql = "select id, match_url, team_home, team_guest from `match` where tour = ? ";
+        String sql = "select id, match_url, team_home, team_guest from `match` where tour = ? and tournament_id = 5 ";
         try {
             preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, tour);
