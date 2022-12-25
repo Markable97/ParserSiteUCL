@@ -91,8 +91,8 @@ public class DBRequest {
                 try {            
                     preparedStatement = connect.prepareStatement(sql);
                     preparedStatement.setString(1, image.name);
-                    preparedStatement.setString(2, image.preview);
-                    preparedStatement.setString(3, image.origin);
+                    preparedStatement.setString(2, image.origin);
+                    preparedStatement.setString(3, image.preview);
                     preparedStatement.setString(4, media.teamHome);
                     preparedStatement.setString(5, media.teamGuest);
                     preparedStatement.setString(6, media.tour);
