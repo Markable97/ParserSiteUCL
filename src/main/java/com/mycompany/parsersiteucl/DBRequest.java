@@ -78,6 +78,36 @@ public class DBRequest {
         }
     }
     
+    void addMedia(ArrayList<Media> medias) {
+        String sql = "insert into media (match_id, media_name, url_origin, url_preview)\n" +
+                    "select m.id, ?, ?, ?\n" +
+                    "from `match` m\n" +
+                    "where m.team_home = (select t.id from team t where t.team_name = ?)\n" +
+                    " and m.team_guest = (select t.id from team t where t.team_name = ?)\n" +
+                    " and m.tour = ?\n" +
+                    " and m.tournament_id = 5;";
+        for(Media media : medias){
+            for(Media.Image image : media.images){
+                try {            
+                    preparedStatement = connect.prepareStatement(sql);
+                    preparedStatement.setString(1, image.name);
+                    preparedStatement.setString(2, image.preview);
+                    preparedStatement.setString(3, image.origin);
+                    preparedStatement.setString(4, media.teamHome);
+                    preparedStatement.setString(5, media.teamGuest);
+                    preparedStatement.setString(6, media.tour);
+//                    System.out.println(preparedStatement.toString());
+                    boolean add = preparedStatement.execute();
+//                    System.out.println("add = " + add);
+                    connect.commit();
+                } catch (SQLException ex) {
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        
+    }
+    
     void addTeams(ArrayList<Team> teams) {
         String sql = "insert into team(league_id, team_name, team_url, team_image) "
                    + "values (2, ?, ?, ?)";

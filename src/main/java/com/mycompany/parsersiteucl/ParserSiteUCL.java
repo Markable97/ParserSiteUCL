@@ -27,10 +27,11 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
+        parserTournementMedia();
 //        parserTeam();
 //        dopParserPlayer();
 //          parsingCalendar();
-        parserActionInMatch();
+//        parserActionInMatch();
         //parserSquad();
 //        parsingCalendar();
         //parsingTournamenttable();
@@ -44,6 +45,27 @@ public class ParserSiteUCL {
         //downloadPictures();
     }
     
+    static void parserTournementMedia() throws IOException{
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027402/photos").get();
+        String tourParser = "(2 тур)";
+        Elements lis = doc.select("li.photo__item");
+        ArrayList<Media> medias = new ArrayList<>();
+        for(Element li : lis){
+            Element a = li.selectFirst("a.photo__title");
+            String tour = a.text();
+            String albumUrl = a.attr("abs:href");
+            if(tour.contains(tourParser)){
+                Media media = new Media();
+                media.urlAlbum = albumUrl;
+                media.parserTeamNaming(tour, tourParser);
+                media.parserPreviewImage(albumUrl);
+                System.out.println("images = " + media.toString());
+                medias.add(media);
+            }
+        }
+        DBRequest dbr = new DBRequest();
+        dbr.addMedia(medias);
+    }
     
     static void parserTeam() throws IOException, InterruptedException{
         Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/teams").get();
