@@ -133,7 +133,7 @@ public class DBRequest {
                     " from team t " +
                     " join tournamnet_team tt on t.id = tt.team_id " +
                     " left join squad_actual sa on t.id = sa.team_id \n" +
-                    " where t.league_id = 2 and tt.tournament_id = 5 \n" +
+                    " where t.league_id = 2 and tt.tournament_id = 6 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -215,6 +215,7 @@ public class DBRequest {
                 preparedStatement.setString(3, p.urlName);
                 try{
                     preparedStatement.execute();
+                    System.out.println("Home");
                 }catch (SQLException ex) {
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
                     connect.rollback();
@@ -227,6 +228,7 @@ public class DBRequest {
                 preparedStatement.setString(3, p.urlName);
                 try{
                     preparedStatement.execute();
+                    System.out.println("Guest");
                 }catch (SQLException ex) {
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
                     connect.rollback();
@@ -236,9 +238,10 @@ public class DBRequest {
                 try{
                     System.out.println(a.toString());
                     addPlayerAction(a, m.idmatch);
-                  
                 }catch(SQLException ex) {
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("Action = " + a.toString());
+                    System.out.println(preparedStatement.toString());
                     connect.rollback();
                     break;
                 }
@@ -252,7 +255,9 @@ public class DBRequest {
     
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
-        String sql = "select id, match_url, team_home, team_guest from `match` where tour = ? and tournament_id = 5 ";
+        String sql = "select id, match_url, team_home, team_guest "
+                + " from `match` m where tour = ? and tournament_id = 6 and played = 2 "
+                + " and 0 = (select count(1) from  player_in_match where match_id = m.id) ";
         try {
             preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, tour);

@@ -25,13 +25,20 @@ public class ParserSiteUCL {
     static ArrayList<TournamentTable> divisions = new ArrayList<>();
     static ArrayList<Match> matches = new ArrayList<>();
     
+    /**
+    * Чтобы спарсить результаты:
+    * 1) Сначала нужно вызвать метод dopParserPlayer() для конткретного дивизиона
+    * 2) Потом parsingCalendar() с методом updateScore()
+    * 3) Затем parserActionInMatch с указанием тура и конкретного дивизиона
+    */
+    
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        parserTournementMedia();
+        //parserTournementMedia();
 //        parserTeam();
 //        dopParserPlayer();
 //          parsingCalendar();
-//        parserActionInMatch();
+        parserActionInMatch();
         //parserSquad();
 //        parsingCalendar();
         //parsingTournamenttable();
@@ -96,7 +103,7 @@ public class ParserSiteUCL {
             TimeUnit.SECONDS.sleep(2);
             ArrayList<Player> players = parserSquad(false, t.urlName);
             System.out.println(players.size() + " < " + t.countPlayers);
-            if(players.size() > t.countPlayers){
+            if(players.size() != t.countPlayers){
                 System.out.println("Yes add to db");
                 dbr.addedPlayers(t.urlName, players);
             }
@@ -107,13 +114,13 @@ public class ParserSiteUCL {
     
     static void parserActionInMatch() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
-        ArrayList<Match> matches = dbr.getMatchesForParser("3 тур");
+        ArrayList<Match> matches = dbr.getMatchesForParser("1 тур");
         for(Match m : matches){
             System.out.println(m.urlMatch);
             Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();
             Element divProtocol = doc.getElementById("match-protocol");
-            Element ulHome = divProtocol.selectFirst("ul.match-protocol__team.match-protocol__team--left");
-            Element ulGuest = divProtocol.selectFirst("ul.match-protocol__team.match-protocol__team--right");
+            Elements ulHome = divProtocol.select("ul.match-protocol__team.match-protocol__team--left");
+            Elements ulGuest = divProtocol.select("ul.match-protocol__team.match-protocol__team--right");
             ArrayList<Player> playersHome = getPlayers(ulHome.select("a.match-protocol__member-name"));
             ArrayList<Player> playersGuest = getPlayers(ulGuest.select("a.match-protocol__member-name"));
             Element divEvents = doc.getElementById("match-events");
@@ -122,6 +129,10 @@ public class ParserSiteUCL {
             if(liActions != null){
                 actions.addAll(getAction(liActions));
             };
+            System.out.println("Match: " + m.toString());
+            System.out.println("Home: " + playersHome.toString());
+            System.out.println("Guest: " + playersGuest.toString());
+            System.out.println("Action: " + actions.size());
             dbr.addPlayerAction(m, playersHome, playersGuest, actions);
         }
         
@@ -166,7 +177,7 @@ public class ParserSiteUCL {
         //File input = new File("D:\\Загрузки\\squad.html");
         //Document doc = Jsoup.parse(input, "UTF-8");
         System.out.println("-----team " + urlTeam + " --------");
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027402/teams/application?"+urlTeam).get();
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();
