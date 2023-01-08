@@ -46,11 +46,17 @@ public class Media {
     public Media() {
     }
     
+    void setTeamsAndTour(String home, String guest, String tour){
+        this.tour = tour;
+        this.teamHome = home;
+        this.teamGuest = guest;
+    }
+    
     void parserTeamNaming(String textTour, String parserTour){
-        tour = parserTour.replace("(", "").replace(")", "");
+        tour = parserTour.replace("(", "").replace(")", "").trim();
         String[] teams = textTour.replace(parserTour, "").trim().split(" - ");
         teamHome = teams[0].trim();
-        teamGuest = teams[1];
+        teamGuest = teams[1].trim();
     }
     
     void parserPreviewImage(String albumUrl){

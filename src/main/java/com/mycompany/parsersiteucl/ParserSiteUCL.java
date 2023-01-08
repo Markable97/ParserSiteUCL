@@ -27,18 +27,19 @@ public class ParserSiteUCL {
     
     /**
     * Чтобы спарсить результаты:
-    * 1) Сначала нужно вызвать метод dopParserPlayer() для конткретного дивизиона
+    * 1) Сначала нужно вызвать метод dopParserPlayer() для конткретного дивизиона (поменять в parserSquad)
     * 2) Потом parsingCalendar() с методом updateScore()
     * 3) Затем parserActionInMatch с указанием тура и конкретного дивизиона
     */
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        //parserTournementMedia();
+//        parserTournementMedia();
+            parserTournementMediaOnly();
 //        parserTeam();
 //        dopParserPlayer();
 //          parsingCalendar();
-        parserActionInMatch();
+        //parserActionInMatch();
         //parserSquad();
 //        parsingCalendar();
         //parsingTournamenttable();
@@ -52,9 +53,20 @@ public class ParserSiteUCL {
         //downloadPictures();
     }
     
+    /**
+    * Чтобы спарсить мелия:
+    * 1) Указывает ссылку на медия турнира
+    * 2) Указываем для какого именно тура надо спарсить фотки
+    * 3) DBRequest.addMedia не забыть поменять id турнирра
+    * P.S Смотреть правильный нейминг команд и туров, бывает, что криво написано
+    * id = 5 5Х5 (КОМСОМОЛЬСКАЯ) https://f-league.ru/tournament/1027402/photos
+    * id = 6 8Х8 (ОЛИМПИЙСКАЯ ДЕРЕВНЯ)
+    * id = 7 5Х5 (ВОДНЫЙ СТАДИОН)) https://f-league.ru/tournament/1027651/photos
+    */
     static void parserTournementMedia() throws IOException{
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027402/photos").get();
-        String tourParser = "(2 тур)";
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/photos").get();
+        int tournamentId = 7;
+        String tourParser = "( 1 Тур)";
         Elements lis = doc.select("li.photo__item");
         ArrayList<Media> medias = new ArrayList<>();
         for(Element li : lis){
@@ -64,14 +76,35 @@ public class ParserSiteUCL {
             if(tour.contains(tourParser)){
                 Media media = new Media();
                 media.urlAlbum = albumUrl;
-                media.parserTeamNaming(tour, tourParser);
+                try {
+                    media.parserTeamNaming(tour, tourParser);
+                } catch(Exception ex){
+                    System.out.println("Ошиибка в парсинге имени команд(( " + tour);
+                    continue;
+                }
                 media.parserPreviewImage(albumUrl);
                 System.out.println("images = " + media.toString());
                 medias.add(media);
             }
         }
         DBRequest dbr = new DBRequest();
-        dbr.addMedia(medias);
+        dbr.addMedia(medias, tournamentId);
+    }
+    
+    static void parserTournementMediaOnly(){
+        String albumUrl = "https://f-league.ru/tournament/1027651/photos/view?album_id=1089267";
+        int tournamentId = 7;
+        String tour = "1 тур";
+        String teamHome = "Дух Провинции";
+        String teamGuest = "Тинькофф";
+        Media media = new Media();
+        media.urlAlbum = albumUrl;
+        media.setTeamsAndTour(teamHome, teamGuest, tour);
+        media.parserPreviewImage(albumUrl);
+        ArrayList<Media> medias = new ArrayList<>();
+        medias.add(media);
+        DBRequest dbr = new DBRequest();
+        dbr.addMedia(medias, tournamentId); 
     }
     
     static void parserTeam() throws IOException, InterruptedException{
@@ -177,7 +210,7 @@ public class ParserSiteUCL {
         //File input = new File("D:\\Загрузки\\squad.html");
         //Document doc = Jsoup.parse(input, "UTF-8");
         System.out.println("-----team " + urlTeam + " --------");
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams/application?"+urlTeam).get();
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();

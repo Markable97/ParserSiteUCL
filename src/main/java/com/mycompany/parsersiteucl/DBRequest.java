@@ -78,14 +78,14 @@ public class DBRequest {
         }
     }
     
-    void addMedia(ArrayList<Media> medias) {
+    void addMedia(ArrayList<Media> medias, int tournamenId) {
         String sql = "insert into media (match_id, media_name, url_origin, url_preview)\n" +
                     "select m.id, ?, ?, ?\n" +
                     "from `match` m\n" +
                     "where m.team_home = (select t.id from team t where t.team_name = ?)\n" +
                     " and m.team_guest = (select t.id from team t where t.team_name = ?)\n" +
                     " and m.tour = ?\n" +
-                    " and m.tournament_id = 5;";
+                    " and m.tournament_id = ?;";
         for(Media media : medias){
             for(Media.Image image : media.images){
                 try {            
@@ -96,6 +96,7 @@ public class DBRequest {
                     preparedStatement.setString(4, media.teamHome);
                     preparedStatement.setString(5, media.teamGuest);
                     preparedStatement.setString(6, media.tour);
+                    preparedStatement.setInt(7, tournamenId);
 //                    System.out.println(preparedStatement.toString());
                     boolean add = preparedStatement.execute();
 //                    System.out.println("add = " + add);
@@ -133,7 +134,7 @@ public class DBRequest {
                     " from team t " +
                     " join tournamnet_team tt on t.id = tt.team_id " +
                     " left join squad_actual sa on t.id = sa.team_id \n" +
-                    " where t.league_id = 2 and tt.tournament_id = 6 \n" +
+                    " where t.league_id = 2 and tt.tournament_id = 7 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -256,7 +257,7 @@ public class DBRequest {
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
         String sql = "select id, match_url, team_home, team_guest "
-                + " from `match` m where tour = ? and tournament_id = 6 and played = 2 "
+                + " from `match` m where tour = ? and tournament_id = 7 and played = 2 "
                 + " and 0 = (select count(1) from  player_in_match where match_id = m.id) ";
         try {
             preparedStatement = connect.prepareStatement(sql);
