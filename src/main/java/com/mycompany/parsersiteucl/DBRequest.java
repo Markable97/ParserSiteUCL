@@ -134,7 +134,7 @@ public class DBRequest {
                     " from team t " +
                     " join tournamnet_team tt on t.id = tt.team_id " +
                     " left join squad_actual sa on t.id = sa.team_id \n" +
-                    " where t.league_id = 2 and tt.tournament_id = 7 \n" +
+                    " where t.league_id = 2 and tt.tournament_id = 6 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -241,10 +241,10 @@ public class DBRequest {
                     addPlayerAction(a, m.idmatch);
                 }catch(SQLException ex) {
                     Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println("Action = " + a.toString());
+                    System.out.println("Action bad = " + a.toString());
                     System.out.println(preparedStatement.toString());
-                    connect.rollback();
-                    break;
+//                    connect.rollback();
+//                    break;
                 }
             }
             connect.commit();
@@ -257,7 +257,8 @@ public class DBRequest {
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
         String sql = "select id, match_url, team_home, team_guest "
-                + " from `match` m where tour = ? and tournament_id = 7 and played = 2 "
+                + " from `match` m where tour = ? and tournament_id = 6 and played = 2 "
+//                + " and m.match_url = '/match/3115192'";
                 + " and 0 = (select count(1) from  player_in_match where match_id = m.id) ";
         try {
             preparedStatement = connect.prepareStatement(sql);
@@ -315,9 +316,30 @@ public class DBRequest {
             }
         }
     }
+   
+    void updateMatchUrl(ArrayList<ParserSiteUCL.MatchLocal> matches){
+        String sql = " update `match`\n" +
+                    " set match_url = ?\n" +
+                    " where tournament_id = 5 \n" +
+                    " and team_home = (select id from team t where t.team_name = ?)\n" +
+                    " and team_guest = (select id from team t where t.team_name = ?);";
+        for(ParserSiteUCL.MatchLocal match : matches){
+            try {
+                preparedStatement = connect.prepareStatement(sql);
+                preparedStatement.setString(1, match.url);
+                preparedStatement.setString(2, match.teamHome);
+                preparedStatement.setString(3, match.teamGuest);
+                preparedStatement.executeUpdate();
+                connect.commit();
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+    }
     
     void updateScore(ArrayList<ParserSiteUCL.MatchLocal> matches){
-        String updateScore = "call matchAddResult((select id from `match` where match_url = ?), ?, ?);;";
+        String updateScore = "call matchAddResult((select id from `match` where match_url = ?), ?, ?);";
         for(ParserSiteUCL.MatchLocal match : matches){
             try{
                 if(!match.goalsHome.equals("-")){

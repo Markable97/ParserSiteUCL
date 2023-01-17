@@ -27,19 +27,19 @@ public class ParserSiteUCL {
     
     /**
     * Чтобы спарсить результаты:
-    * 1) Сначала нужно вызвать метод dopParserPlayer() для конткретного дивизиона (поменять в parserSquad)
-    * 2) Потом parsingCalendar() с методом updateScore()
-    * 3) Затем parserActionInMatch с указанием тура и конкретного дивизиона
+    * 1) Сначала нужно вызвать метод dopParserPlayer() для конткретного дивизиона (поменять в getTeamWithCountPlayers и parserSquad id)
+    * 2) Потом parsingCalendar() с методом updateScore() (Бывают ситуации когда поменялись url матчей тогда вызвать метод updateMatchUrl)
+    * 3) Затем parserActionInMatch с указанием тура и конкретного дивизиона в getMatchesForParser
     */
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
 //        parserTournementMedia();
-            parserTournementMediaOnly();
+          parserTournementMediaOnly();
 //        parserTeam();
 //        dopParserPlayer();
 //          parsingCalendar();
-        //parserActionInMatch();
+//        parserActionInMatch();
         //parserSquad();
 //        parsingCalendar();
         //parsingTournamenttable();
@@ -59,15 +59,16 @@ public class ParserSiteUCL {
     * 2) Указываем для какого именно тура надо спарсить фотки
     * 3) DBRequest.addMedia не забыть поменять id турнирра
     * P.S Смотреть правильный нейминг команд и туров, бывает, что криво написано
-    * id = 5 5Х5 (КОМСОМОЛЬСКАЯ) https://f-league.ru/tournament/1027402/photos
+    * id = 5 5Х5 (КОМСОМОЛЬСКАЯ) https://f-league.ru/tournament/1027996/photos
     * id = 6 8Х8 (ОЛИМПИЙСКАЯ ДЕРЕВНЯ)
     * id = 7 5Х5 (ВОДНЫЙ СТАДИОН)) https://f-league.ru/tournament/1027651/photos
     */
     static void parserTournementMedia() throws IOException{
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/photos").get();
-        int tournamentId = 7;
-        String tourParser = "( 1 Тур)";
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027996/photos").get();
+        int tournamentId = 5;
+        String tourParser = "( 4 Тур)";
         Elements lis = doc.select("li.photo__item");
+        System.out.println("lis size = " + lis.size());
         ArrayList<Media> medias = new ArrayList<>();
         for(Element li : lis){
             Element a = li.selectFirst("a.photo__title");
@@ -92,11 +93,11 @@ public class ParserSiteUCL {
     }
     
     static void parserTournementMediaOnly(){
-        String albumUrl = "https://f-league.ru/tournament/1027651/photos/view?album_id=1089267";
-        int tournamentId = 7;
-        String tour = "1 тур";
-        String teamHome = "Дух Провинции";
-        String teamGuest = "Тинькофф";
+        String albumUrl = "https://f-league.ru/tournament/1027996/photos/view?album_id=1090515";
+        int tournamentId = 5;
+        String tour = "4 тур";
+        String teamHome = "ФК Ещё Заиграю";
+        String teamGuest = "ПСЖ";
         Media media = new Media();
         media.urlAlbum = albumUrl;
         media.setTeamsAndTour(teamHome, teamGuest, tour);
@@ -147,7 +148,7 @@ public class ParserSiteUCL {
     
     static void parserActionInMatch() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
-        ArrayList<Match> matches = dbr.getMatchesForParser("1 тур");
+        ArrayList<Match> matches = dbr.getMatchesForParser("2 тур");
         for(Match m : matches){
             System.out.println(m.urlMatch);
             Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();
@@ -210,7 +211,7 @@ public class ParserSiteUCL {
         //File input = new File("D:\\Загрузки\\squad.html");
         //Document doc = Jsoup.parse(input, "UTF-8");
         System.out.println("-----team " + urlTeam + " --------");
-        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/teams/application?"+urlTeam).get();
+        Document doc = Jsoup.connect("https://f-league.ru/tournament/1027652/teams/application?"+urlTeam).get();
         Element table = doc.selectFirst("div.tabs__pane.tabs__pane--active.js-tab-cont.js-show");
         Elements rows = table.select("tr.table__row");
         ArrayList<Player> players = new ArrayList<>();
@@ -265,7 +266,8 @@ public class ParserSiteUCL {
         }
         
         DBRequest dbr = new DBRequest();
-        //dbr.addedMatches(mathes);
+//        dbr.addedMatches(mathes);
+        //dbr.updateMatchUrl(mathes);
         dbr.updateScore(mathes);
         
        

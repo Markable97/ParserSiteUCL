@@ -53,7 +53,7 @@ public class Media {
     }
     
     void parserTeamNaming(String textTour, String parserTour){
-        tour = parserTour.replace("(", "").replace(")", "").trim();
+        tour = parserTour.replace("(", "").replace(")", "").trim().toLowerCase();
         String[] teams = textTour.replace(parserTour, "").trim().split(" - ");
         teamHome = teams[0].trim();
         teamGuest = teams[1].trim();
