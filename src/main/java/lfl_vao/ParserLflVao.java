@@ -5,6 +5,7 @@
  */
 package lfl_vao;
 
+import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -28,7 +29,37 @@ import org.jsoup.select.Elements;
  */
 public class ParserLflVao {
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-           parserTeam();
+        parserTeamSquad();
+           //parserTeam();
+    }
+    
+    
+    /**
+    *
+    * urlTournament - если null возьмет все команды для данной лиги, если указать, для конкретного дивизиона
+    */
+    
+    private static void parserTeamSquad() throws IOException{
+        DBRequest db = new DBRequest();
+        String urlTournament = "/tournament18741"; 
+        ArrayList<Team> teams = db.getTeams(urlTournament);
+        for(Team team : teams){
+            String urlParser = "https://lfl.ru"+team.urlName+"/players_list";
+            Document doc = SSLHelper.getConnection(urlParser).get();
+            Elements divPlayers = doc.select("div.cont.with_simple_text");
+            ArrayList<Player> players = new ArrayList<>();
+            for(Element divPlayer : divPlayers){
+                if(divPlayer.selectFirst("div.player_title") != null){
+                    Player player = new Player();
+                    player.parserLfl(divPlayer);
+                    System.out.println(player);
+                    players.add(player);
+                } else {
+                  System.out.println("Не подходит первая фигня");
+                }
+            }
+            db.addedPlayers(team.urlName, players);
+        }
     }
     
     private static void parserTeam() throws IOException{

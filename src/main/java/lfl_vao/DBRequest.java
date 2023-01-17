@@ -5,6 +5,7 @@
  */
 package lfl_vao;
 
+import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -40,6 +41,75 @@ public class DBRequest {
         } catch (SQLException ex) {
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    void addedPlayers(String teamUrl, ArrayList<Player> players){
+        String sqlInsertPLayer = "INSERT INTO player (league_id, name, surname, middle, birthday, amplua_id, player_url, image_url)"
+                + "SELECT 3, ?, ?, ?, ?, (select id from amplua where amplua_name = ?), ?, ?";
+        String sqlInsertSqua = "INSERT INTO squad_actual (player_id, team_id)" +
+                "SELECT (select id from player where player_url = ?),(select id from team where team_url = ?)";
+       
+        for(Player p : players){
+            try {
+                PreparedStatement preparedStatement = connect.prepareStatement(sqlInsertPLayer);
+                String[] name = p.name.split(" ");
+                preparedStatement.setString(1, name[1]);
+                preparedStatement.setString(2, name[0]);
+                String middle = "";
+                if(name.length > 2) {
+                    middle = name[2];
+                }
+                preparedStatement.setString(3, middle);
+                preparedStatement.setString(4, p.birthday);
+                preparedStatement.setString(5, p.amplua);
+                preparedStatement.setString(6, p.urlName);
+                preparedStatement.setString(7, p.urlPictures);
+                try{
+                    preparedStatement.executeUpdate();
+                }catch(SQLException ex){
+                    System.out.println("Уже добавлен " + ex.getLocalizedMessage());
+//                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    continue;
+                }
+                PreparedStatement preparedStatementPlayer = connect.prepareStatement(sqlInsertSqua);
+                preparedStatementPlayer.setString(1, p.urlName);
+                preparedStatementPlayer.setString(2, teamUrl);
+                preparedStatementPlayer.executeUpdate();
+                connect.commit();
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    ArrayList<Team> getTeams(String urlTournament){
+        String sql = "select tm.*\n" +
+                    "from tournament t, tournamnet_team tt, team tm\n" +
+                    "where tt.team_id = tm.id\n" +
+                    "and tt.tournament_id = t.id\n" +
+                    "and tm.league_id = 3\n";
+        if(urlTournament != null){
+            sql +=  "and t.url = ?;";
+        }
+        ArrayList<Team> teams = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = connect.prepareStatement(sql);
+            if(urlTournament != null){
+                preparedStatement.setString(1, urlTournament);
+            }
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                String teamName = resultSet.getString("team_name");
+                String teamUrl = resultSet.getString("team_url");
+                Team team = new Team();
+                team.teamName = teamName;
+                team.urlName = teamUrl;
+                teams.add(team);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return teams;
     }
     
     void addTeams(ArrayList<Team> teams, String divisionUrl){

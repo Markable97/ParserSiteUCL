@@ -20,7 +20,7 @@ public class Team {
     public String urlName;
     public String urlImage;
     int countPlayers;
-    ArrayList<Player> players = new ArrayList<>();
+    public ArrayList<Player> players = new ArrayList<>();
     
     public Team(){
         

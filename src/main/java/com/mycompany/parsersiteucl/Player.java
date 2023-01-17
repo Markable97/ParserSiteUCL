@@ -5,20 +5,23 @@
  */
 package com.mycompany.parsersiteucl;
 
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 /**
  *
  * @author m.glushko
  */
 public class Player {
     String teamName;
-    String name;
-    String urlName;
-    String urlPictures;
-    String amplua;
+    public String name;
+    public String urlName;
+    public String urlPictures;
+    public String amplua;
     int height;
     int weight;
     String post;
-    String birthday;
+    public String birthday;
     int games;
     int goal;
     int assist;
@@ -41,7 +44,7 @@ public class Player {
         this.amplua = amplua;
     }
 
-    Player() {
+    public Player() {
     }
 
     @Override
@@ -49,7 +52,17 @@ public class Player {
         return "Player{" + "name=" + name + ", urlName=" + urlName + ", urlPictures=" + urlPictures + ", amplua=" + amplua + ", birthday=" + birthday + '}';
     }
     
-    
+    public void parserLfl(Element divPlayer){
+        Element divPlayerLogo = divPlayer.selectFirst("div.player_logo");
+        urlPictures = divPlayerLogo.selectFirst("a").attr("href");
+        Element divPlayerInfo = divPlayer.selectFirst("div.player_title");
+        Element pTitle = divPlayerInfo.selectFirst("p.player_title_name");
+        urlName = pTitle.selectFirst("a").attr("href");
+        name = pTitle.text();
+        Elements p = divPlayerInfo.select("p");
+        amplua = p.get(2).text().replace("Амплуа: ", "").trim();
+        birthday = p.get(4).text().replace("Дата рождения: ", "").trim();
+    }
 
     
 }
