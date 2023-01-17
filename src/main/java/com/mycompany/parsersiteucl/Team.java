@@ -6,6 +6,8 @@
 package com.mycompany.parsersiteucl;
 
 import java.util.ArrayList;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  *
@@ -13,10 +15,10 @@ import java.util.ArrayList;
  */
 public class Team {
     
-    String teamName;
+    public String teamName;
     String nameDivision;
-    String urlName;
-    String urlImage;
+    public String urlName;
+    public String urlImage;
     int countPlayers;
     ArrayList<Player> players = new ArrayList<>();
     
@@ -42,7 +44,20 @@ public class Team {
     }
 
 
-
+    public boolean isTeam(){
+        return teamName != null && urlName != null && urlImage != null;
+    }
+    
+    public void parserTeamLfl(Element tr){
+        Element tdLogo = tr.selectFirst("td.logo-cell");
+        Element tdName = tr.selectFirst("td.club-name-cell");
+        if(tdLogo != null && tdName != null){
+            teamName = tdName.text();
+            urlName = tdLogo.selectFirst("a").attr("href");
+            urlImage = tdLogo.selectFirst("img").attr("src");
+        }
+        
+    }
     
     
     
