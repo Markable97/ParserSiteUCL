@@ -296,8 +296,8 @@ public class ParserSiteUCL {
         public String toString() {
             return "MatchLocal{" + "date=" + date + ", time=" + time + ", teamHome=" + teamHome + ", teamGuest=" + teamGuest + ", tour=" + tour + ", url=" + url + ", goalsHome=" + goalsHome + ", goalsGuest=" + goalsGuest + '}';
         }
-
         
+            
        
     }
     

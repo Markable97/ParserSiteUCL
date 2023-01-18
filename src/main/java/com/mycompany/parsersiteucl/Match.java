@@ -43,6 +43,6 @@ public class Match {
                 ", teamHome=" + teamHome + ", goalHome=" + goalHome + ", goalGuest=" + goalGuest + ", teamGuest=" + teamGuest + ", players=" + players + 
                 ", stadium=" + stadium + ", refere=" + refere + '}' + "\n";
     }
-
     
+
 }

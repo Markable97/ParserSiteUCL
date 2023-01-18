@@ -43,6 +43,48 @@ public class DBRequest {
         }
     }
     
+    void addOnlyMatchesInfo(String tournamentUrl, ArrayList<MatchLocal> matches) {
+        String sql = "INSERT INTO `match` (match_url, tournament_id, tour, team_home, team_guest, played)\n" +
+                    "select ?, (select id from tournament t where t.url = ?), ?, (select id from team where team_url = ?), (select id from team where team_url = ?), 0;";
+        matches.forEach((match) -> {
+            try {
+                PreparedStatement preparedStatement = connect.prepareStatement(sql);
+                preparedStatement.setString(1, match.url);
+                preparedStatement.setString(2, tournamentUrl);
+                preparedStatement.setString(3, match.tour);
+                preparedStatement.setString(4, match.teamHomeUrl);
+                preparedStatement.setString(5, match.teamGuestUrl);
+                preparedStatement.executeUpdate();
+                connect.commit();
+            } catch (SQLException ex) {
+                Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+    
+    ArrayList<String> getTournamnetWithCountTours(){
+        String sql = "select distinct url\n" +
+                    "from tournament t, tournamnet_team tt, team tm\n" +
+                    "where tt.team_id = tm.id\n" +
+                    "and tt.tournament_id = t.id\n" +
+                    "and tm.league_id = 3\n" +
+                    "#and t.url = '/tournament18634'\n" +
+                    "group by t.url;";
+        ArrayList<String> touurnamnetTours = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = connect.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                String data = resultSet.getString(1);
+                touurnamnetTours.add(data);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return touurnamnetTours;
+                
+    }
+    
     void addedPlayers(String teamUrl, ArrayList<Player> players){
         String sqlInsertPLayer = "INSERT INTO player (league_id, name, surname, middle, birthday, amplua_id, player_url, image_url)"
                 + "SELECT 3, ?, ?, ?, ?, (select id from amplua where amplua_name = ?), ?, ?";

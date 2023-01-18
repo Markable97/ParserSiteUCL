@@ -29,16 +29,43 @@ import org.jsoup.select.Elements;
  */
 public class ParserLflVao {
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        parserTeamSquad();
+        parserAllMatch();
+        //parserTeamSquad();
            //parserTeam();
     }
     
+    
+    private static void parserAllMatch() throws IOException{
+        DBRequest db = new DBRequest();
+        ArrayList<String> tournamentsWithTours = db.getTournamnetWithCountTours();
+        for(String tournament : tournamentsWithTours){
+            System.out.println("-----------------------" + tournament + "------------------------------");
+            String idTournamnet = tournament.replaceAll("\\D+","");
+            String urlParser = "https://lfl.ru/?ajax=1&method=tournament_calendar_table&tournament_id=" +idTournamnet+ "&limit=400";
+            Document doc = SSLHelper.getConnection(urlParser).get();
+            Element tbody = doc.selectFirst("tbody");
+            Elements trs = tbody.select("tr");
+            ArrayList<MatchLocal> matches = new ArrayList<>();
+            for(Element tr : trs){
+                if(tr.children().size() == 1) {
+                    //Строка тура
+                    System.out.println(tr.text());
+                } else {
+                    MatchLocal match = new MatchLocal();
+                    match.parserMatchInfoLfl(tr);
+                    matches.add(match);
+                }
+            }
+            System.out.println("Добавление в базу");
+            db.addOnlyMatchesInfo(tournament, matches);
+            System.out.println("-----------------------------------------------------");
+        }
+    }
     
     /**
     *
     * urlTournament - если null возьмет все команды для данной лиги, если указать, для конкретного дивизиона
     */
-    
     private static void parserTeamSquad() throws IOException{
         DBRequest db = new DBRequest();
         String urlTournament = "/tournament18741"; 
