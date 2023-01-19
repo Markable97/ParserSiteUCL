@@ -13,7 +13,7 @@ import org.jsoup.select.Elements;
  * @author march
  */
 public class MatchLocal {
-    String date;
+        String date;
         String time;
         String teamHome;
         String teamHomeUrl;
@@ -41,9 +41,9 @@ public class MatchLocal {
         Element teamHome = tr.selectFirst("td.right_align_table").selectFirst("a"); //Не спрашивайте меня почему так PS перепутано право с левом
         Element teamGuest = tr.selectFirst("td.left_align_table").selectFirst("a");
         Element date = tds.get(1).selectFirst("a");
-        String time = tds.get(2).text();
+        this.date = getDateWithoutDay(date.text());
+        this.time = tds.get(2).text();
         this.tour = tds.get(0).text() + " тур";
-        this.time = getDateWithoutDay(date.text()) + " " + time;
         url = date.attr("href");
         this.teamHome = teamHome.attr("title");
         this.teamHomeUrl = teamHome.attr("href");

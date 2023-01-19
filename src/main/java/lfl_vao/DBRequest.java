@@ -43,6 +43,32 @@ public class DBRequest {
         }
     }
     
+    void addSchedule(String tournament, ArrayList<MatchLocal> matches) {
+        String sql = "call addScheduleWithMatchUrl(3, ?, ?, ?)";
+        matches.forEach((match) -> {
+            if( !(match.stadium.equals("-") && match.date.equals("-") && match.time.equals("-"))){
+                try {
+                    PreparedStatement preparedStatement = connect.prepareStatement(sql);
+                    preparedStatement.setString(1, match.stadium);
+                    preparedStatement.setString(2, match.date + " " + match.time);
+                    preparedStatement.setString(3, match.url);
+                    preparedStatement.executeUpdate();
+                    connect.commit();
+                    System.out.println("матч добавлен +++++++++++++++++++++++");
+                } catch (SQLException ex) {
+                    System.out.println("матч уже был добавлен в расписание !!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                System.out.println("матч не подходит под добавления ----------------------------");
+            }
+        });
+    }
+
+    void addMatchWithResult(String tournament, ArrayList<MatchLocal> matches) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
     void addOnlyMatchesInfo(String tournamentUrl, ArrayList<MatchLocal> matches) {
         String sql = "INSERT INTO `match` (match_url, tournament_id, tour, team_home, team_guest, played)\n" +
                     "select ?, (select id from tournament t where t.url = ?), ?, (select id from team where team_url = ?), (select id from team where team_url = ?), 0;";

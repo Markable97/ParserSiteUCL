@@ -8,17 +8,8 @@ package lfl_vao;
 import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -28,14 +19,25 @@ import org.jsoup.select.Elements;
  * @author march
  */
 public class ParserLflVao {
+    
+    private final static int TYPE_ACTION_INFO = 1;
+    private final static int TYPE_ACTION_SCHEDULE = 2;
+    private final static int TYPE_ACTION_RESULT = 3;
+    
+    
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        parserAllMatch();
+        parserAllMatch(TYPE_ACTION_SCHEDULE);
         //parserTeamSquad();
            //parserTeam();
     }
     
-    
-    private static void parserAllMatch() throws IOException{
+    /**
+    * typeAction:
+    * 1 - Добавление просто матчей
+    * 2 - Добавление календаря
+    * 3 - Добавление счета
+    **/
+    private static void parserAllMatch(int typeAction) throws IOException{
         DBRequest db = new DBRequest();
         ArrayList<String> tournamentsWithTours = db.getTournamnetWithCountTours();
         for(String tournament : tournamentsWithTours){
@@ -54,10 +56,21 @@ public class ParserLflVao {
                     MatchLocal match = new MatchLocal();
                     match.parserMatchInfoLfl(tr);
                     matches.add(match);
+                    System.out.println(match);
                 }
             }
             System.out.println("Добавление в базу");
-            db.addOnlyMatchesInfo(tournament, matches);
+            switch(typeAction){
+                case TYPE_ACTION_INFO: 
+                    db.addOnlyMatchesInfo(tournament, matches);
+                    break;
+                case TYPE_ACTION_SCHEDULE: 
+                    db.addSchedule(tournament, matches);
+                    break;
+                case TYPE_ACTION_RESULT: 
+                    db.addMatchWithResult(tournament, matches);
+                    break;
+            }
             System.out.println("-----------------------------------------------------");
         }
     }
