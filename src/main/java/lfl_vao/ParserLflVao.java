@@ -26,10 +26,24 @@ public class ParserLflVao {
     
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        parserAllMatch(TYPE_ACTION_SCHEDULE);
+        parserAllMatch(TYPE_ACTION_RESULT);
         //parserTeamSquad();
            //parserTeam();
     }
+    
+    /**
+    * urlTournament - ссылка турнира, если отсутсвует, все матчи
+    **/
+//    private static void parserResult(String tour, String urlTournament) throws IOException {
+//        DBRequest db = new DBRequest();
+//        ArrayList<String> urls = db.getTournamentUrl();
+//        urls.forEach((url) -> {
+//            System.out.println("-----------------------" + url + "------------------------------");
+//            String idTournamnet = url.replaceAll("\\D+","");
+//            String urlParser = "https://lfl.ru/?ajax=1&method=tournament_resault_table&tournament_id=" +idTournamnet;
+//            Document doc = SSLHelper.getConnection(urlParser).get();
+//        });
+//    }
     
     /**
     * typeAction:
@@ -39,37 +53,54 @@ public class ParserLflVao {
     **/
     private static void parserAllMatch(int typeAction) throws IOException{
         DBRequest db = new DBRequest();
+        String method;
+        switch(typeAction){
+            case TYPE_ACTION_INFO:
+                method = "";
+                break;
+            case TYPE_ACTION_SCHEDULE: 
+                method = "tournament_calendar_table";
+                break;
+            case TYPE_ACTION_RESULT: 
+                method = "tournament_resault_table";
+                break;
+            default: 
+                method = ""; 
+                break;
+        }
         ArrayList<String> tournamentsWithTours = db.getTournamnetWithCountTours();
         for(String tournament : tournamentsWithTours){
             System.out.println("-----------------------" + tournament + "------------------------------");
             String idTournamnet = tournament.replaceAll("\\D+","");
-            String urlParser = "https://lfl.ru/?ajax=1&method=tournament_calendar_table&tournament_id=" +idTournamnet+ "&limit=400";
+            String urlParser = "https://lfl.ru/?ajax=1&method="+method+"&tournament_id=" +idTournamnet+ "&limit=400";
             Document doc = SSLHelper.getConnection(urlParser).get();
             Element tbody = doc.selectFirst("tbody");
-            Elements trs = tbody.select("tr");
-            ArrayList<MatchLocal> matches = new ArrayList<>();
-            for(Element tr : trs){
-                if(tr.children().size() == 1) {
-                    //Строка тура
-                    System.out.println(tr.text());
-                } else {
-                    MatchLocal match = new MatchLocal();
-                    match.parserMatchInfoLfl(tr);
-                    matches.add(match);
-                    System.out.println(match);
+            if(tbody != null) {
+                Elements trs = tbody.select("tr");
+                ArrayList<MatchLocal> matches = new ArrayList<>();
+                for(Element tr : trs){
+                    if(tr.children().size() == 1) {
+                        //Строка тура
+                        System.out.println(tr.text());
+                    } else {
+                        MatchLocal match = new MatchLocal();
+                        match.parserMatchInfoLfl(tr);
+                        matches.add(match);
+                        System.out.println(match);
+                    }
                 }
-            }
-            System.out.println("Добавление в базу");
-            switch(typeAction){
-                case TYPE_ACTION_INFO: 
-                    db.addOnlyMatchesInfo(tournament, matches);
-                    break;
-                case TYPE_ACTION_SCHEDULE: 
-                    db.addSchedule(tournament, matches);
-                    break;
-                case TYPE_ACTION_RESULT: 
-                    db.addMatchWithResult(tournament, matches);
-                    break;
+                System.out.println("Добавление в базу");
+                switch(typeAction){
+                    case TYPE_ACTION_INFO: 
+                        db.addOnlyMatchesInfo(tournament, matches);
+                        break;
+                    case TYPE_ACTION_SCHEDULE: 
+                        db.addSchedule(tournament, matches);
+                        break;
+                    case TYPE_ACTION_RESULT: 
+                        db.updateScore(matches);
+                        break;
+                }
             }
             System.out.println("-----------------------------------------------------");
         }

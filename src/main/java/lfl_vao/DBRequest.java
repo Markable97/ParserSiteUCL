@@ -5,6 +5,7 @@
  */
 package lfl_vao;
 
+import com.mycompany.parsersiteucl.ParserSiteUCL;
 import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
 import java.sql.Connection;
@@ -65,9 +66,36 @@ public class DBRequest {
         });
     }
 
-    void addMatchWithResult(String tournament, ArrayList<MatchLocal> matches) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    void updateScore(ArrayList<MatchLocal> matches){
+        String sql = "call matchAddResult((select id from `match` where match_url = ?), ?, ?);";
+        for(MatchLocal match : matches){
+            try{
+                PreparedStatement preparedStatement;
+                if(!match.goalsHome.equals("-")){
+                    try{
+                       int goalsHome = Integer.parseInt(match.goalsHome);
+                       int goalsGuest = Integer.parseInt(match.goalsGuest);
+                       try {
+                            preparedStatement = connect.prepareStatement(sql);
+                            preparedStatement.setString(1, match.url);
+                            preparedStatement.setInt(2, goalsHome);
+                            preparedStatement.setInt(3, goalsGuest);
+                            preparedStatement.executeUpdate();
+                            connect.commit();
+                        } catch (SQLException ex) {
+                            Logger.getLogger(com.mycompany.parsersiteucl.DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }catch(NumberFormatException ex){
+                        connect.rollback();
+                        break;
+                    }
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(com.mycompany.parsersiteucl.DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
+
     
     void addOnlyMatchesInfo(String tournamentUrl, ArrayList<MatchLocal> matches) {
         String sql = "INSERT INTO `match` (match_url, tournament_id, tour, team_home, team_guest, played)\n" +
@@ -211,6 +239,34 @@ public class DBRequest {
                         "and s.id = 5;";
         try {
             PreparedStatement preparedStatement = connect.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                String url = resultSet.getString(1);
+                urls.add(url);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        };
+        return urls;
+    }
+
+    ArrayList<String> getAssignTournamentMatches(String urlTournament) {
+        ArrayList<String> urls = new ArrayList<>();
+       String sqlDop;
+        if(urlTournament != null) {
+            sqlDop = " and t.url = ? ";
+        } else {
+            sqlDop ="";
+        }
+        String sql = "select m.match_url\n" +
+                    "from `match` m\n" +
+                    "where m.tournament_id in (select t.id from tournament t, season s where t.season_id = s.id and s.league_id = 3 "+ sqlDop +" )\n" +
+                    "and played = 1 ";
+        try {
+            PreparedStatement preparedStatement = connect.prepareStatement(sql);
+            if(urlTournament != null) {
+                preparedStatement.setString(1, urlTournament);
+            }
             ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()){
                 String url = resultSet.getString(1);

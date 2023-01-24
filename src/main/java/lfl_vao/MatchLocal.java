@@ -50,9 +50,15 @@ public class MatchLocal {
         this.teamGuest = teamGuest.attr("title");
         this.teamGuestUrl = teamGuest.attr("href");
         Element score = tds.get(4);
-        //TODO Посмотреть как приходит счет и правильно спарсить
-        this.goalsHome = null;
-        this.goalsGuest = null;
+        String[] scores = score.text().split(":");
+        if(scores.length == 2) {
+            this.goalsHome = scores[0].trim();
+            this.goalsGuest = scores[1].trim();
+        } else {
+            this.goalsHome = "-";
+            this.goalsGuest = "-";
+        }
+        
         stadium = tds.get(6).text();
     }
 
