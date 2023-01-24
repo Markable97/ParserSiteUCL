@@ -126,7 +126,11 @@ public class DBRequest {
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+    /*
+    * id = 5 5Х5 (КОМСОМОЛЬСКАЯ) 
+    * id = 6 8Х8 (ОЛИМПИЙСКАЯ ДЕРЕВНЯ)
+    * id = 7 5Х5 (ВОДНЫЙ СТАДИОН))
+    */
     public ArrayList<Team> getTeamWithCountPlayers(){
         ArrayList<Team> teams = new ArrayList<>();
         try {
@@ -253,7 +257,11 @@ public class DBRequest {
         }
        
     }
-    
+    /*
+    * id = 5 5Х5 (КОМСОМОЛЬСКАЯ) 
+    * id = 6 8Х8 (ОЛИМПИЙСКАЯ ДЕРЕВНЯ)
+    * id = 7 5Х5 (ВОДНЫЙ СТАДИОН))
+    */
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
         String sql = "select id, match_url, team_home, team_guest "
