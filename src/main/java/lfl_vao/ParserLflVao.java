@@ -31,7 +31,7 @@ public class ParserLflVao {
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         parserResultActions();
 //        parserAllMatch(TYPE_ACTION_SCHEDULE);
-        //parserTeamSquad();
+//        parserTeamSquad();
            //parserTeam();
     }
     
@@ -40,12 +40,13 @@ public class ParserLflVao {
     **/
     private static void parserResultActions(){
         DBRequest db = new DBRequest();
-        ArrayList<String> urls = new ArrayList<>();
-        urls.add("https://lfl.ru/tournament18635/tour1/match3012299");
-        urls.forEach((url) -> {
+        String urlTournament = "/tournament18634";
+        ArrayList<String> errorUrls = new ArrayList<>();
+        ArrayList<MatchForParser> matches = db.getMatchesForParsingAction(urlTournament);
+        matches.forEach((match) -> {
             try {
-                System.out.println("-----------------------" + url + "------------------------------");
-                String urlParser = url;
+                System.out.println("-----------------------" + match.url + "------------------------------");
+                String urlParser = "https://lfl.ru" + match.url;
                 Document doc = SSLHelper.getConnection(urlParser).get();
                 Element divMatchRight = doc.selectFirst("div.match_right");
                 Boolean isCheckTypeNextBlock = true;
@@ -83,11 +84,19 @@ public class ParserLflVao {
                         }
                     }
                 }
-            } catch (IOException ex) {
+                match.players = players;
+                match.actions = acctions;
+                db.addMatchAction(match);
+                Thread.sleep(1000);
+            } catch (IOException | InterruptedException ex) {
+                Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
+                errorUrls.add(match.url);
+            } catch (SQLException ex) {
+                errorUrls.add(match.url + " db");
                 Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
         });
+        System.out.println(errorUrls);
     }
     
     /**
@@ -157,7 +166,7 @@ public class ParserLflVao {
     */
     private static void parserTeamSquad() throws IOException{
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18741"; 
+        String urlTournament = "/tournament18634"; 
         ArrayList<Team> teams = db.getTeams(urlTournament);
         for(Team team : teams){
             String urlParser = "https://lfl.ru"+team.urlName+"/players_list";

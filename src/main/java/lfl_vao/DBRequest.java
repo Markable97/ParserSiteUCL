@@ -14,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -279,11 +280,111 @@ public class DBRequest {
         return urls;
     }
 
-    void addMatchResult(MatchForParser match) {
+    ArrayList<MatchForParser> getMatchesForParsingAction(String utlTournament){
+        ArrayList<MatchForParser> matches = new ArrayList<>();
+        String sql = "select m.id, match_url\n" +
+                        "from `match` m\n" +
+                        "where m.tournament_id in (\n" +
+                        "		select t.id \n" +
+                        "        from tournament t, season s \n" +
+                        "        where t.season_id = s.id and s.league_id = 3 and t.url = ?\n" +
+                        ")\n" +
+                        "and played = 2";
+        try {
+            PreparedStatement preparedStatement = connect.prepareStatement(sql);
+            preparedStatement.setString(1, utlTournament);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                Long id = resultSet.getLong(1);
+                String url = resultSet.getString(2);
+                MatchForParser match = new MatchForParser(url, id);
+                matches.add(match);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return matches;
+    }
+    
+    void addMatchAction(MatchForParser match) throws SQLException {
+        
+        addInProtocol(match.players, match.id);
+        addPlayerAction(match.actions, match.id);
+        connect.commit();
+    }
+    
+    private void addInProtocol(ArrayList<Player> players, long matchId) throws SQLException{
         String sqlInsertProtocol = "insert into player_in_match (match_id, player_id, team_id) "
                 + "select ?, p.id, (select id from team t where t.team_url = ?)"
                 + " from player p "
                 + " where p.player_url = ? ";
+        for(Player player : players) {
+            PreparedStatement preparedStatement = connect.prepareStatement(sqlInsertProtocol);
+            preparedStatement.setLong(1, matchId);
+            preparedStatement.setString(2, player.teamUrl); 
+            preparedStatement.setString(3, player.urlName); 
+            System.out.println(preparedStatement.toString());
+            preparedStatement.execute();
+        }
+        connect.commit();
+    }
+    
+    private void addActionGoal(long match_id, String player_url, String player_assist_url, int time, int countAction) throws SQLException{
+        String sql_dop;
+        if(player_assist_url == null){
+            sql_dop = ", ?";
+        } else {
+            sql_dop = ", (select id from player where player_url = ?) ";
+        }
+        String sql = "call addActionGoal("
+                + "? "
+                + ",(select id from player where player_url = ?) "
+                + sql_dop
+                + ",?)";
+        int index = time;
+        for(int c = 0; c < countAction; c++){
+            PreparedStatement preparedStatement = connect.prepareStatement(sql);
+            preparedStatement.setLong(1, match_id);
+            preparedStatement.setString(2, player_url);
+            if(player_assist_url == null){
+                preparedStatement.setNull(3, Types.INTEGER);
+            } else {
+                preparedStatement.setString(3, player_assist_url);
+            }
+            preparedStatement.setString(4, String.valueOf(index + c + 1));
+            System.out.println(preparedStatement.toString());
+            preparedStatement.execute();
+        }
         
+    }
+    
+    private void addPlayerAction(ArrayList<Action> actions, long match_id) throws SQLException {
+        int index = 0;
+        for(Action action : actions) {
+                if (action.action.equals("Гол") || action.action.equals("Стандарт")){
+                    //Обрабатываем только гол
+                    addActionGoal(match_id, action.urlPlayer,action.urlAssist, index, action.countAction);
+                } else {
+                    String sql;
+                    switch(action.action){
+                        case "Пенальти": sql = "call addActionPenalty(?, (select id from player where player_url = ?), ?)"; break;
+                        case "Автогол": sql = "call addActionOwnGoal(?, (select id from player where player_url = ?), ?)"; break;
+                        case "Жёлтая карточка": sql = "call addActionYellowCard(?, (select id from player where player_url = ?), ?)"; break;
+                        case "Красная карточка": sql = "call addActionRedCard(?, (select id from player where player_url = ?), ?)"; break;
+                        case "Передача": sql = "call addAssist(?, (select id from player where player_url = ?), ?)"; break;
+                        default: sql = "call addActionPenaltyOut(?, (select id from player where player_url = ?), ?)"; break;
+                    }
+                    for(int c = 0; c < action.countAction; c++){
+                        index = index + c + 1;
+                        PreparedStatement preparedStatement = connect.prepareStatement(sql);
+                        preparedStatement.setLong(1, match_id);
+                        preparedStatement.setString(2, action.urlPlayer);
+                        preparedStatement.setString(3, String.valueOf(index));
+                        preparedStatement.execute();
+                    } 
+                    
+                }
+            index++;
+        }
     }
 }

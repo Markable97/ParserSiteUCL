@@ -3,7 +3,9 @@ com\mycompany\parsersiteucl\Media.class
 lfl_vao\DBRequest.class
 com\mycompany\parsersiteucl\MyThreadPicture.class
 lfl_vao\MatchLocal.class
+lfl_vao\MatchForParser.class
 com\mycompany\parsersiteucl\Media$Image.class
+lfl_vao\ParserLflHelper.class
 lfl_vao\ParserLflVao.class
 com\mycompany\parsersiteucl\ParserSiteUCL$MatchLocal.class
 lfl_vao\SSLHelper$1.class

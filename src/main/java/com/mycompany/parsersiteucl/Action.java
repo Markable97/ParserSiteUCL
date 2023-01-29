@@ -11,11 +11,11 @@ package com.mycompany.parsersiteucl;
  * @author march
  */
 public class Action {
-    String urlPlayer;
-    String urlAssist;
-    String time;
-    String action;
-    int countAction;
+    public String urlPlayer;
+    public String urlAssist;
+    public String time;
+    public String action;
+    public int countAction;
 
     public Action(String urlPlayer, String action, int countAction) {
         this.urlPlayer = urlPlayer;
