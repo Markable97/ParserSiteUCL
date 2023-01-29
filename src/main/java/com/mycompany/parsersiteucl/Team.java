@@ -15,6 +15,7 @@ import org.jsoup.select.Elements;
  */
 public class Team {
     
+    public int id;
     public String teamName;
     String nameDivision;
     public String urlName;

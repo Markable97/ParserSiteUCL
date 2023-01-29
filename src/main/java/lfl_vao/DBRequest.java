@@ -141,6 +141,40 @@ public class DBRequest {
                 
     }
     
+    void updatePlayersUrl(int teamId, ArrayList<Player> players) {
+        String sql = "update player\n" +
+                    "set player_url = ?\n" +
+                    "where league_id = 3\n" +
+                    "and id in (select sa.player_id from squad_actual sa where sa.team_id = ?)\n" +
+                    "and name = ? and surname = ?;";
+        
+            for(Player p : players){
+                try {
+                    PreparedStatement preparedStatement = connect.prepareStatement(sql);
+                    preparedStatement.setString(1, p.urlName);
+                    preparedStatement.setInt(2, teamId);
+                    String[] name = p.name.split(" ");
+                    preparedStatement.setString(3, name[1]);
+                    preparedStatement.setString(4, name[0]);
+                    int rows = preparedStatement.executeUpdate();
+                    if(rows == 0) {
+                        System.out.println("not found player = " + p);
+                    }
+                    if(rows >  1) {
+                        System.out.println("multy found player = " + teamId + " " + p);
+                    }
+                    connect.commit();
+                } catch (SQLException ex) {
+                    System.out.println("Уже добавлен " + ex.getLocalizedMessage() + " " + p);
+    //                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    continue;
+                }
+            }
+            
+            
+        
+    }
+    
     void addedPlayers(String teamUrl, ArrayList<Player> players){
         String sqlInsertPLayer = "INSERT INTO player (league_id, name, surname, middle, birthday, amplua_id, player_url, image_url)"
                 + "SELECT 3, ?, ?, ?, ?, (select id from amplua where amplua_name = ?), ?, ?";
@@ -162,6 +196,7 @@ public class DBRequest {
                 preparedStatement.setString(5, p.amplua);
                 preparedStatement.setString(6, p.urlName);
                 preparedStatement.setString(7, p.urlPictures);
+                System.out.println("Добавление  " + p.toString());
                 try{
                     preparedStatement.executeUpdate();
                 }catch(SQLException ex){
@@ -185,7 +220,7 @@ public class DBRequest {
                     "from tournament t, tournamnet_team tt, team tm\n" +
                     "where tt.team_id = tm.id\n" +
                     "and tt.tournament_id = t.id\n" +
-                    "and tm.league_id = 3\n";
+                    "and tm.league_id = 3 #and tm.id = 151\n";
         if(urlTournament != null){
             sql +=  "and t.url = ?;";
         }
@@ -197,9 +232,11 @@ public class DBRequest {
             }
             ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()){
+                int teamId = resultSet.getInt("id");
                 String teamName = resultSet.getString("team_name");
                 String teamUrl = resultSet.getString("team_url");
                 Team team = new Team();
+                team.id = teamId;
                 team.teamName = teamName;
                 team.urlName = teamUrl;
                 teams.add(team);
@@ -289,7 +326,7 @@ public class DBRequest {
                         "        from tournament t, season s \n" +
                         "        where t.season_id = s.id and s.league_id = 3 and t.url = ?\n" +
                         ")\n" +
-                        "and played = 2";
+                        "and played = 2 #and (select count(1) from player_in_match where match_id = m.id) = 0";
         try {
             PreparedStatement preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, utlTournament);
@@ -324,7 +361,13 @@ public class DBRequest {
             preparedStatement.setString(2, player.teamUrl); 
             preparedStatement.setString(3, player.urlName); 
             System.out.println(preparedStatement.toString());
-            preparedStatement.execute();
+            try{
+                preparedStatement.execute();    
+            } catch (SQLException ex) {
+                System.out.println("Игрок добавлен " + player + " " + ex.getLocalizedMessage());
+                continue;
+            }
+            
         }
         connect.commit();
     }
@@ -352,8 +395,14 @@ public class DBRequest {
                 preparedStatement.setString(3, player_assist_url);
             }
             preparedStatement.setString(4, String.valueOf(index + c + 1));
-            System.out.println(preparedStatement.toString());
-            preparedStatement.execute();
+            try{
+                System.out.println(preparedStatement.toString());
+                preparedStatement.execute();
+            } catch (SQLException ex) {
+                System.out.println("Действие добавлено " + ex.getLocalizedMessage());
+                continue;
+            }
+            
         }
         
     }
@@ -369,7 +418,7 @@ public class DBRequest {
                     switch(action.action){
                         case "Пенальти": sql = "call addActionPenalty(?, (select id from player where player_url = ?), ?)"; break;
                         case "Автогол": sql = "call addActionOwnGoal(?, (select id from player where player_url = ?), ?)"; break;
-                        case "Жёлтая карточка": sql = "call addActionYellowCard(?, (select id from player where player_url = ?), ?)"; break;
+                        case "Желтая карточка": sql = "call addActionYellowCard(?, (select id from player where player_url = ?), ?)"; break;
                         case "Красная карточка": sql = "call addActionRedCard(?, (select id from player where player_url = ?), ?)"; break;
                         case "Передача": sql = "call addAssist(?, (select id from player where player_url = ?), ?)"; break;
                         default: sql = "call addActionPenaltyOut(?, (select id from player where player_url = ?), ?)"; break;
@@ -380,7 +429,13 @@ public class DBRequest {
                         preparedStatement.setLong(1, match_id);
                         preparedStatement.setString(2, action.urlPlayer);
                         preparedStatement.setString(3, String.valueOf(index));
-                        preparedStatement.execute();
+                        try{
+                            System.out.println(preparedStatement.toString());
+                            preparedStatement.execute();
+                        } catch (SQLException ex) {
+                            System.out.println("Действие уже добавлено " + ex.getLocalizedMessage());
+                            continue;
+                        }
                     } 
                     
                 }

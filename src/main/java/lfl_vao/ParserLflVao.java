@@ -29,8 +29,9 @@ public class ParserLflVao {
     
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
+//        updateUrlSquad();
         parserResultActions();
-//        parserAllMatch(TYPE_ACTION_SCHEDULE);
+//        parserAllMatch(TYPE_ACTION_RESULT);
 //        parserTeamSquad();
            //parserTeam();
     }
@@ -160,13 +161,34 @@ public class ParserLflVao {
         }
     }
     
+    private static void updateUrlSquad() throws IOException {
+        DBRequest db = new DBRequest();
+        String urlTournament = "/tournament18635"; 
+        ArrayList<Team> teams = db.getTeams(urlTournament);
+        for(Team team : teams){
+            String urlParser = "https://lfl.ru"+team.urlName;
+            System.out.println(team.teamName);
+            Document doc = SSLHelper.getConnection(urlParser).get();
+            Elements divPlayers = doc.select("div.player");
+            ArrayList<Player> players = new ArrayList<>();
+            for(Element divPlayer : divPlayers){
+                Player player = new Player();
+                Element a = divPlayer.selectFirst("a");
+                player.parserLflInMainPageTeam(a);
+//                System.out.println(player);
+                players.add(player);
+            }
+            db.updatePlayersUrl(team.id, players);
+        }
+    }
+    
     /**
     *
     * urlTournament - если null возьмет все команды для данной лиги, если указать, для конкретного дивизиона
     */
     private static void parserTeamSquad() throws IOException{
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18634"; 
+        String urlTournament = "/tournament18633"; 
         ArrayList<Team> teams = db.getTeams(urlTournament);
         for(Team team : teams){
             String urlParser = "https://lfl.ru"+team.urlName+"/players_list";

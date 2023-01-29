@@ -65,5 +65,11 @@ public class Player {
         birthday = p.get(4).text().replace("Дата рождения: ", "").trim();
     }
     
+    public void parserLflInMainPageTeam(Element aPlayer){
+        urlName = aPlayer.attr("href");
+        String nameInfo = aPlayer.text().replaceAll("[^a-zA-Zа-яёА-ЯЁ -]", "").trim();
+        name = nameInfo;
+    }
+    
   
 }
