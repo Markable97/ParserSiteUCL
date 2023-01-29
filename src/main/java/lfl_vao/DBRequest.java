@@ -5,6 +5,7 @@
  */
 package lfl_vao;
 
+import com.mycompany.parsersiteucl.Action;
 import com.mycompany.parsersiteucl.ParserSiteUCL;
 import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
@@ -276,5 +277,13 @@ public class DBRequest {
             Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
         };
         return urls;
+    }
+
+    void addMatchResult(MatchForParser match) {
+        String sqlInsertProtocol = "insert into player_in_match (match_id, player_id, team_id) "
+                + "select ?, p.id, (select id from team t where t.team_url = ?)"
+                + " from player p "
+                + " where p.player_url = ? ";
+        
     }
 }

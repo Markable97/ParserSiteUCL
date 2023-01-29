@@ -5,11 +5,14 @@
  */
 package lfl_vao;
 
+import com.mycompany.parsersiteucl.Action;
 import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -26,7 +29,8 @@ public class ParserLflVao {
     
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        parserAllMatch(TYPE_ACTION_RESULT);
+        parserResultActions();
+//        parserAllMatch(TYPE_ACTION_SCHEDULE);
         //parserTeamSquad();
            //parserTeam();
     }
@@ -34,16 +38,57 @@ public class ParserLflVao {
     /**
     * urlTournament - ссылка турнира, если отсутсвует, все матчи
     **/
-//    private static void parserResult(String tour, String urlTournament) throws IOException {
-//        DBRequest db = new DBRequest();
-//        ArrayList<String> urls = db.getTournamentUrl();
-//        urls.forEach((url) -> {
-//            System.out.println("-----------------------" + url + "------------------------------");
-//            String idTournamnet = url.replaceAll("\\D+","");
-//            String urlParser = "https://lfl.ru/?ajax=1&method=tournament_resault_table&tournament_id=" +idTournamnet;
-//            Document doc = SSLHelper.getConnection(urlParser).get();
-//        });
-//    }
+    private static void parserResultActions(){
+        DBRequest db = new DBRequest();
+        ArrayList<String> urls = new ArrayList<>();
+        urls.add("https://lfl.ru/tournament18635/tour1/match3012299");
+        urls.forEach((url) -> {
+            try {
+                System.out.println("-----------------------" + url + "------------------------------");
+                String urlParser = url;
+                Document doc = SSLHelper.getConnection(urlParser).get();
+                Element divMatchRight = doc.selectFirst("div.match_right");
+                Boolean isCheckTypeNextBlock = true;
+                int type = ParserLflHelper.TYPE_UNKNOWS;
+                ArrayList<Player> players = new ArrayList<>();
+                ArrayList<Action> acctions = new ArrayList<>();
+                for(Element element : divMatchRight.children()){
+                    if(isCheckTypeNextBlock) {
+                        String textElement = element.text();
+                        String textTag = element.normalName();
+                        type = ParserLflHelper.typeNextBlock(textTag, textElement);
+                        isCheckTypeNextBlock = false;
+                    } else {
+                        isCheckTypeNextBlock = true;
+                        switch(type){
+                            case ParserLflHelper.TYPE_GOALS:
+                                System.out.println("It is goals");
+                                acctions.addAll(ParserLflHelper.parserActionGoals(element));
+                                break;
+                            case ParserLflHelper.TYPE_ASSISTENTS: 
+                                System.out.println("It is assists");
+                                acctions.addAll(ParserLflHelper.parserActionAssists(element));
+                                break;
+                            case ParserLflHelper.TYPE_SQUADS: 
+                                System.out.println("It is squad");
+                                players = ParserLflHelper.parserProtocol(element);
+                                break;
+                            case ParserLflHelper.TYPE_WARNINGS: 
+                                System.out.println("It is warnings");
+                                acctions.addAll(ParserLflHelper.parserActionWarnings(element));
+                                break;
+                            default: 
+                                System.out.println("It is unknows");
+                                break;
+                        }
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        });
+    }
     
     /**
     * typeAction:

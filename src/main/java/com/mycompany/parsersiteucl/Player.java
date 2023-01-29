@@ -13,7 +13,8 @@ import org.jsoup.select.Elements;
  * @author m.glushko
  */
 public class Player {
-    String teamName;
+    public String teamName;
+    public String teamUrl;
     public String name;
     public String urlName;
     public String urlPictures;
@@ -63,6 +64,6 @@ public class Player {
         amplua = p.get(2).text().replace("Амплуа: ", "").trim();
         birthday = p.get(4).text().replace("Дата рождения: ", "").trim();
     }
-
     
+  
 }
