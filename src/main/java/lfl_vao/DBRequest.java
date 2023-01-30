@@ -141,7 +141,7 @@ public class DBRequest {
                 
     }
     
-    void updatePlayersUrl(int teamId, ArrayList<Player> players) {
+    void updatePlayersUrl(Team team, ArrayList<Player> players) {
         String sql = "update player\n" +
                     "set player_url = ?\n" +
                     "where league_id = 3\n" +
@@ -152,16 +152,23 @@ public class DBRequest {
                 try {
                     PreparedStatement preparedStatement = connect.prepareStatement(sql);
                     preparedStatement.setString(1, p.urlName);
-                    preparedStatement.setInt(2, teamId);
+                    preparedStatement.setInt(2, team.id);
                     String[] name = p.name.split(" ");
                     preparedStatement.setString(3, name[1]);
                     preparedStatement.setString(4, name[0]);
                     int rows = preparedStatement.executeUpdate();
                     if(rows == 0) {
                         System.out.println("not found player = " + p);
+                        ParserLflVao.getPersonInfoMainPage(p);
+                        if(p.urlPictures != null) {
+                            System.out.println("Добавляем игрока ");
+                            ArrayList<Player> onePlayer = new ArrayList<>();
+                            onePlayer.add(p);
+                            addedPlayers(team.urlName, onePlayer);
+                        }
                     }
                     if(rows >  1) {
-                        System.out.println("multy found player = " + teamId + " " + p);
+                        System.out.println("multy found player = " + team.id + " " + p);
                     }
                     connect.commit();
                 } catch (SQLException ex) {

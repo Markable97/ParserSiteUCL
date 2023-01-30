@@ -29,8 +29,8 @@ public class ParserLflVao {
     
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-//        updateUrlSquad();
-        parserResultActions();
+        updateUrlSquad();
+//        parserResultActions();
 //        parserAllMatch(TYPE_ACTION_RESULT);
 //        parserTeamSquad();
            //parserTeam();
@@ -161,6 +161,22 @@ public class ParserLflVao {
         }
     }
     
+    static void getPersonInfoMainPage(Player player){
+        String urlParser = "https://lfl.ru" + player.urlName;
+        System.out.println("Parsing main page");
+        try {
+            Document doc = SSLHelper.getConnection(urlParser).get();
+            Element logo = doc.selectFirst("div.player_logo").selectFirst("a");
+            player.urlPictures = logo.attr("href");
+            Elements info = doc.selectFirst("div.player_title").getElementsByTag("p");
+            player.name = info.get(0).text().trim();
+            player.birthday = info.get(2).text().replace("Дата рождения:", "").trim();
+            player.amplua = info.get(3).selectFirst("a").attr("title");
+        } catch (Exception ex) {
+            Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private static void updateUrlSquad() throws IOException {
         DBRequest db = new DBRequest();
         String urlTournament = "/tournament18635"; 
@@ -178,7 +194,7 @@ public class ParserLflVao {
 //                System.out.println(player);
                 players.add(player);
             }
-            db.updatePlayersUrl(team.id, players);
+            db.updatePlayersUrl(team, players);
         }
     }
     
