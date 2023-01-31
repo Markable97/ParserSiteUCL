@@ -50,7 +50,7 @@ public class Player {
 
     @Override
     public String toString() {
-        return "Player{" + "name=" + name + ", urlName=" + urlName + ", urlPictures=" + urlPictures + ", amplua=" + amplua + ", birthday=" + birthday + '}';
+        return "Player{" + "name=" + name + ", urlName=" + urlName + ", urlPictures=" + urlPictures + ", amplua=" + amplua + ", birthday=" + birthday + ", teamName" + teamName +'}';
     }
     
     public void parserLfl(Element divPlayer){

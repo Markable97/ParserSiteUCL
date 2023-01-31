@@ -379,9 +379,9 @@ public class DBRequest {
         connect.commit();
     }
     
-    private void addActionGoal(long match_id, String player_url, String player_assist_url, int time, int countAction) throws SQLException{
+    private void addActionGoal(long match_id, Action action, int time, int countAction) throws SQLException{
         String sql_dop;
-        if(player_assist_url == null){
+        if(action.urlAssist == null){
             sql_dop = ", ?";
         } else {
             sql_dop = ", (select id from player where player_url = ?) ";
@@ -395,13 +395,19 @@ public class DBRequest {
         for(int c = 0; c < countAction; c++){
             PreparedStatement preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setLong(1, match_id);
-            preparedStatement.setString(2, player_url);
-            if(player_assist_url == null){
+            preparedStatement.setString(2, action.urlPlayer);
+            if(action.urlAssist == null){
                 preparedStatement.setNull(3, Types.INTEGER);
             } else {
-                preparedStatement.setString(3, player_assist_url);
+                preparedStatement.setString(3, action.urlAssist);
             }
-            preparedStatement.setString(4, String.valueOf(index + c + 1));
+            String timeStr;
+            if(action.time != null && !action.time.isBlank()){
+                timeStr = action.time;
+            } else {
+                timeStr = String.valueOf(index + c + 1);
+            }
+            preparedStatement.setString(4, timeStr);
             try{
                 System.out.println(preparedStatement.toString());
                 preparedStatement.execute();
@@ -419,7 +425,7 @@ public class DBRequest {
         for(Action action : actions) {
                 if (action.action.equals("Гол") || action.action.equals("Стандарт")){
                     //Обрабатываем только гол
-                    addActionGoal(match_id, action.urlPlayer,action.urlAssist, index, action.countAction);
+                    addActionGoal(match_id, action, index, action.countAction);
                 } else {
                     String sql;
                     switch(action.action){
@@ -435,7 +441,13 @@ public class DBRequest {
                         PreparedStatement preparedStatement = connect.prepareStatement(sql);
                         preparedStatement.setLong(1, match_id);
                         preparedStatement.setString(2, action.urlPlayer);
-                        preparedStatement.setString(3, String.valueOf(index));
+                        String timeStr;
+                        if(action.time != null && !action.time.isBlank()) {
+                            timeStr = action.time;
+                        }else {
+                            timeStr = String.valueOf(index);
+                        }
+                        preparedStatement.setString(3, timeStr);
                         try{
                             System.out.println(preparedStatement.toString());
                             preparedStatement.execute();

@@ -29,9 +29,9 @@ public class ParserLflVao {
     
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        updateUrlSquad();
-//        parserResultActions();
-//        parserAllMatch(TYPE_ACTION_RESULT);
+//        updateUrlSquad();
+        parserResultActions();
+//        parserAllMatch(TYPE_ACTION_SCHEDULE);
 //        parserTeamSquad();
            //parserTeam();
     }
@@ -41,9 +41,11 @@ public class ParserLflVao {
     **/
     private static void parserResultActions(){
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18634";
+        String urlTournament = "/tournament18633";
+        boolean isHighDivision = true;
         ArrayList<String> errorUrls = new ArrayList<>();
         ArrayList<MatchForParser> matches = db.getMatchesForParsingAction(urlTournament);
+        matches.add(new MatchForParser("/match3013562", 1));
         matches.forEach((match) -> {
             try {
                 System.out.println("-----------------------" + match.url + "------------------------------");
@@ -65,7 +67,11 @@ public class ParserLflVao {
                         switch(type){
                             case ParserLflHelper.TYPE_GOALS:
                                 System.out.println("It is goals");
-                                acctions.addAll(ParserLflHelper.parserActionGoals(element));
+                                if(isHighDivision) {
+                                    acctions.addAll(ParserLflHelper.parserActionsGoalsHighDivision(element));
+                                } else {
+                                    acctions.addAll(ParserLflHelper.parserActionGoals(element));
+                                }
                                 break;
                             case ParserLflHelper.TYPE_ASSISTENTS: 
                                 System.out.println("It is assists");
@@ -73,11 +79,23 @@ public class ParserLflVao {
                                 break;
                             case ParserLflHelper.TYPE_SQUADS: 
                                 System.out.println("It is squad");
-                                players = ParserLflHelper.parserProtocol(element);
+                                if(isHighDivision) {
+                                    players = ParserLflHelper.parserProtocolHighDivision(element);
+                                } else {
+                                    players = ParserLflHelper.parserProtocol(element);
+                                }
                                 break;
                             case ParserLflHelper.TYPE_WARNINGS: 
                                 System.out.println("It is warnings");
-                                acctions.addAll(ParserLflHelper.parserActionWarnings(element));
+                                if(isHighDivision) {
+                                    acctions.addAll(ParserLflHelper.parserActionWarningsHighDivision(element));
+                                } else {
+                                    acctions.addAll(ParserLflHelper.parserActionWarnings(element));
+                                }
+                                break;
+                            case ParserLflHelper.TYPE_PENALTY_OUT:
+                                System.out.println("It is penalty out");
+                                acctions.addAll(ParserLflHelper.parserActionPenaltyOut(element));
                                 break;
                             default: 
                                 System.out.println("It is unknows");
@@ -88,11 +106,13 @@ public class ParserLflVao {
                 match.players = players;
                 match.actions = acctions;
                 db.addMatchAction(match);
-                Thread.sleep(1000);
+                System.out.println("Чутка подождем, чтобы не забанили");
+                Thread.sleep(2000);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
                 errorUrls.add(match.url);
-            } catch (SQLException ex) {
+            } 
+            catch (SQLException ex) {
                 errorUrls.add(match.url + " db");
                 Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -179,7 +199,7 @@ public class ParserLflVao {
     
     private static void updateUrlSquad() throws IOException {
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18635"; 
+        String urlTournament = "/tournament18741"; 
         ArrayList<Team> teams = db.getTeams(urlTournament);
         for(Team team : teams){
             String urlParser = "https://lfl.ru"+team.urlName;
@@ -187,14 +207,17 @@ public class ParserLflVao {
             Document doc = SSLHelper.getConnection(urlParser).get();
             Elements divPlayers = doc.select("div.player");
             ArrayList<Player> players = new ArrayList<>();
-            for(Element divPlayer : divPlayers){
-                Player player = new Player();
-                Element a = divPlayer.selectFirst("a");
-                player.parserLflInMainPageTeam(a);
-//                System.out.println(player);
-                players.add(player);
+            if(divPlayers != null) {
+                for(Element divPlayer : divPlayers){
+                    Player player = new Player();
+                    Element a = divPlayer.selectFirst("a");
+                    player.parserLflInMainPageTeam(a);
+    //                System.out.println(player);
+                    players.add(player);
+                }
+                db.updatePlayersUrl(team, players);
             }
-            db.updatePlayersUrl(team, players);
+            
         }
     }
     
@@ -204,7 +227,7 @@ public class ParserLflVao {
     */
     private static void parserTeamSquad() throws IOException{
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18633"; 
+        String urlTournament = "/tournament18741"; 
         ArrayList<Team> teams = db.getTeams(urlTournament);
         for(Team team : teams){
             String urlParser = "https://lfl.ru"+team.urlName+"/players_list";

@@ -138,7 +138,7 @@ public class DBRequest {
                     " from team t " +
                     " join tournamnet_team tt on t.id = tt.team_id " +
                     " left join squad_actual sa on t.id = sa.team_id \n" +
-                    " where t.league_id = 2 and tt.tournament_id = 6 \n" +
+                    " where t.league_id = 2 and tt.tournament_id = 7 \n" +
                     " group by t.team_name, t.team_url;";
             preparedStatement = connect.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
@@ -265,7 +265,7 @@ public class DBRequest {
     ArrayList<Match> getMatchesForParser(String tour){
         ArrayList<Match> matches = new ArrayList<>();
         String sql = "select id, match_url, team_home, team_guest "
-                + " from `match` m where tour = ? and tournament_id = 6 and played = 2 "
+                + " from `match` m where tour = ? and tournament_id = 7 and played = 2 "
 //                + " and m.match_url = '/match/3115192'";
                 + " and 0 = (select count(1) from  player_in_match where match_id = m.id) ";
         try {

@@ -29,6 +29,8 @@ public class Action {
         this.urlAssist = urlAssist;
         this.time = time;
         this.action = action;
+        //Здесь как будто можно поставить 1, чтобы не ломать логику в DBRequest
+        this.countAction = 1;
     }
 
     public static String getTypeCard(String text) {
@@ -50,6 +52,17 @@ public class Action {
             goal = "Автогол";
         }
         return goal;
+    }
+    
+    public static String getTime(String text) {
+        String[] texts = text.split(",");
+        String time;
+        if(texts.length > 1) {
+            time = texts[texts.length - 1].replaceAll("\\D+","")+":00";
+        } else {
+            time = "00:00";
+        }
+        return time;
     }
     
     @Override

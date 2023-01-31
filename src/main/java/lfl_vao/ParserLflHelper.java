@@ -22,6 +22,7 @@ public class ParserLflHelper {
     final static int TYPE_GOALS = 2;
     final static int TYPE_ASSISTENTS = 3;
     final static int TYPE_WARNINGS = 4;
+    final static int TYPE_PENALTY_OUT = 5;
     final static int TYPE_UNKNOWS = -1;
     
     static int typeNextBlock(String tag, String textTag) {
@@ -37,9 +38,33 @@ public class ParserLflHelper {
         if (textTag.equals("Предупреждения:" ) && tag.equals("p")) {
             return TYPE_WARNINGS;
         }
+        if (textTag.equals("Нереализованные пенальти:") && tag.equals("p")) {
+            return TYPE_PENALTY_OUT;
+        }
         return TYPE_UNKNOWS;
     }
 
+    static ArrayList<Action> parserActionsGoalsHighDivision(Element divGoals) {
+       ArrayList<Action> actions = new ArrayList<>(); 
+       Elements goals = divGoals.select("p");
+       for(Element goal : goals){
+           Elements goalAssist = goal.getElementsByTag("a");
+           Element goalAction = goalAssist.first();
+           String playerUrl = goalAction.attr("href");
+           String actionName = Action.getTypeGoal(goal.text());
+           String actionTime = Action.getTime(goal.text());
+           String assistUrl = null;
+           if(goalAssist.size() > 1) {
+               Element assistAction = goalAssist.last();
+               assistUrl = assistAction.attr("href");
+           }
+           Action action = new Action(playerUrl, assistUrl, actionTime, actionName);
+           System.out.println(action);
+           actions.add(action);
+       }
+       return actions;
+    }
+    
     static ArrayList<Action> parserActionGoals(Element divGoals){
         ArrayList<Action> actions = new ArrayList<>();
         Elements goals = divGoals.getElementsByTag("a");
@@ -76,6 +101,40 @@ public class ParserLflHelper {
         return actions;
     }
     
+    static ArrayList<Action> parserActionPenaltyOut(Element divPenaltyOut){
+        ArrayList<Action> actions = new ArrayList<>(); 
+        Elements penaltyOut = divPenaltyOut.getElementsByTag("span");
+        penaltyOut.forEach((penalty) -> {
+             String url = penalty.selectFirst("a").attr("href");
+             if(url.contains("player")) {
+                 String playerUrl = url;
+                 String actionName = "Незабитый пенальти";
+                 String actionTime = Action.getTime(penaltyOut.text());
+                 Action action = new Action(playerUrl, null, actionTime, actionName);
+                 System.out.println(action);
+                 actions.add(action);
+             }
+         });
+         return actions;
+    }
+    
+    static ArrayList<Action> parserActionWarningsHighDivision(Element divCards){
+       ArrayList<Action> actions = new ArrayList<>(); 
+       Elements cards = divCards.getElementsByTag("span");
+       cards.forEach((card) -> {
+            String url = card.selectFirst("a").attr("href");
+            if(url.contains("player")) {
+                String playerUrl = url;
+                String actionName = Action.getTypeCard(card.selectFirst("img").attr("src"));
+                String actionTime = Action.getTime(card.text());
+                Action action = new Action(playerUrl, null, actionTime, actionName);
+                System.out.println(action);
+                actions.add(action);
+            }
+        });
+        return actions;
+    }
+    
     static ArrayList<Action> parserActionWarnings(Element divCards){
         ArrayList<Action> actions = new ArrayList<>();
         Elements cards = divCards.getElementsByTag("a");
@@ -94,6 +153,49 @@ public class ParserLflHelper {
     }
     
     
+    static ArrayList<Player> parserProtocolHighDivision(Element divProtocol) throws IOException {
+        Element teamHome = divProtocol.selectFirst("a.match_members_club");
+        String urlTeam = teamHome.attr("href");
+        String teamName = teamHome.text();
+        ArrayList<Player> players = new ArrayList<>();
+        for(Element element : divProtocol.children()){
+            Elements spanPlayers = element.getElementsByTag("span");
+            if(spanPlayers.isEmpty()) {
+                //Строка команды
+                Element team =  element.selectFirst("a.match_members_club");
+                if(team != null) {
+                    String urlTeamLocal = team.attr("href");
+                    if(urlTeam.equals(urlTeamLocal)){
+                        System.out.println("----------" + teamName + "------------");
+                        continue; 
+                    } else {
+                        urlTeam = urlTeamLocal;
+                        teamName = team.text();
+                        System.out.println("----------" + teamName + "------------");
+                    }
+                } else {
+                    System.out.println("Строка " + element.text());
+                }
+            } else {
+                //Строки с игроками
+                for(Element spanPlayer : spanPlayers) {
+                    Element playerTag = spanPlayer.selectFirst("a");
+                    String playerUrl = playerTag.attr("href");
+                    String playerName = playerTag.text();
+                    Player player = new Player();
+                    player.teamName = teamName;
+                    player.teamUrl = urlTeam;
+                    player.name = playerName;
+                    player.urlName = playerUrl;
+                    System.out.println(player);
+                    players.add(player);  
+                }
+ 
+            }
+        }
+        return players;
+}
+    
     static ArrayList<Player> parserProtocol(Element divProtocol) throws IOException {
         Element teamHome = divProtocol.selectFirst("a.match_members_club");
         String urlTeam = teamHome.attr("href");
@@ -104,16 +206,16 @@ public class ParserLflHelper {
             if(tagTeam.equals("p")) {
                 //Строка команды
                 Element team =  element.selectFirst("a.match_members_club");
-                String urlTeamLocal = team.attr("href");
-                if(urlTeam.equals(urlTeamLocal)){
-                    System.out.println("----------" + teamName + "------------");
+                    String urlTeamLocal = team.attr("href");
+                    if(urlTeam.equals(urlTeamLocal)){
+                        System.out.println("----------" + teamName + "------------");
                    continue; 
+                    } else {
+                        urlTeam = urlTeamLocal;
+                        teamName = team.text();
+                        System.out.println("----------" + teamName + "------------");
+                    }
                 } else {
-                    urlTeam = urlTeamLocal;
-                    teamName = team.text();
-                    System.out.println("----------" + teamName + "------------");
-                }
-            } else {
                 //Строка игрока
                 Element playerTag = element.selectFirst("a");
                 String playerUrl = playerTag.attr("href");
