@@ -31,21 +31,26 @@ public class ParserLflVao {
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
 //        updateUrlSquad();
         parserResultActions();
-//        parserAllMatch(TYPE_ACTION_SCHEDULE);
+//        parserAllMatch(TYPE_ACTION_RESULT);
 //        parserTeamSquad();
            //parserTeam();
     }
     
     /**
     * urlTournament - ссылка турнира, если отсутсвует, все матчи
+    * https://lfl.ru/tournament18633 - Высший
+    * https://lfl.ru/tournament18634 - Первый
+    * https://lfl.ru/tournament18635 - 2А
+    * https://lfl.ru/tournament18636 - 2В
+    * https://lfl.ru/tournament18741 - Третий
     **/
     private static void parserResultActions(){
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18633";
-        boolean isHighDivision = true;
+        String urlTournament = "/tournament18741";
+        boolean isHighDivision = false;
         ArrayList<String> errorUrls = new ArrayList<>();
         ArrayList<MatchForParser> matches = db.getMatchesForParsingAction(urlTournament);
-        matches.add(new MatchForParser("/match3013562", 1));
+        //matches.add(new MatchForParser("/match3013562", 1));
         matches.forEach((match) -> {
             try {
                 System.out.println("-----------------------" + match.url + "------------------------------");
@@ -107,7 +112,7 @@ public class ParserLflVao {
                 match.actions = acctions;
                 db.addMatchAction(match);
                 System.out.println("Чутка подождем, чтобы не забанили");
-                Thread.sleep(2000);
+                Thread.sleep(5000);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
                 errorUrls.add(match.url);
@@ -137,7 +142,7 @@ public class ParserLflVao {
                 method = "tournament_calendar_table";
                 break;
             case TYPE_ACTION_RESULT: 
-                method = "tournament_resault_table";
+                    method = "tournament_resault_table";
                 break;
             default: 
                 method = ""; 

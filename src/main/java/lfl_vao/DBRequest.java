@@ -333,7 +333,7 @@ public class DBRequest {
                         "        from tournament t, season s \n" +
                         "        where t.season_id = s.id and s.league_id = 3 and t.url = ?\n" +
                         ")\n" +
-                        "and played = 2 #and (select count(1) from player_in_match where match_id = m.id) = 0";
+                        "and played = 2 and (select count(1) from player_in_match where match_id = m.id) = 0";
         try {
             PreparedStatement preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, utlTournament);

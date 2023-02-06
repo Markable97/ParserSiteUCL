@@ -34,12 +34,12 @@ public class ParserSiteUCL {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
-        parserTournementMedia();
+//        parserTournementMedia();
 //          parserTournementMediaOnly();
 //        parserTeam();
 //        dopParserPlayer();
-//          parsingCalendar();
-//        parserActionInMatch();
+//        parsingCalendar();
+        parserActionInMatch();
         //parserSquad();
 //        parsingCalendar();
         //parsingTournamenttable();
@@ -148,7 +148,7 @@ public class ParserSiteUCL {
     
     static void parserActionInMatch() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
-        ArrayList<Match> matches = dbr.getMatchesForParser("4 тур");
+        ArrayList<Match> matches = dbr.getMatchesForParser("5 тур");
         for(Match m : matches){
             System.out.println(m.urlMatch);
             Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();
@@ -208,8 +208,8 @@ public class ParserSiteUCL {
     
     /*
     1027996 - Комсомольская 5Х5
-    1027651 - Водный 5Х5
     1027652 - Олимпийская 8Х8
+    1027651 - Водный 5Х5
     */
     static ArrayList<Player> parserSquad(boolean addToDB, String urlTeam) throws IOException{
         //File input = new File("D:\\Загрузки\\squad.html");
