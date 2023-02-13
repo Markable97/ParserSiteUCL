@@ -27,6 +27,9 @@ public class ParserLflVao {
     private final static int TYPE_ACTION_SCHEDULE = 2;
     private final static int TYPE_ACTION_RESULT = 3;
     
+//    https://lfl.ru/?ajax=1&method=player_stats_table&tournament_id=0&player_id=11471&season_id=45
+//    Штука через, которую будем проверять действия в матчах
+    
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
 //        updateUrlSquad();
