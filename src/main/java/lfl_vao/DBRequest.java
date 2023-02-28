@@ -118,13 +118,13 @@ public class DBRequest {
         });
     }
     
-    ArrayList<String> getTournamnetWithCountTours(){
+        ArrayList<String> getTournamnetWithCountTours(){
         String sql = "select distinct url\n" +
                     "from tournament t, tournamnet_team tt, team tm\n" +
                     "where tt.team_id = tm.id\n" +
                     "and tt.tournament_id = t.id\n" +
                     "and tm.league_id = 3\n" +
-                    "#and t.url = '/tournament18634'\n" +
+//                    "and t.url = '/tournament19160'\n" +
                     "group by t.url;";
         ArrayList<String> touurnamnetTours = new ArrayList<>();
         try {
@@ -209,12 +209,16 @@ public class DBRequest {
                 }catch(SQLException ex){
                     System.out.println("Уже добавлен " + ex.getLocalizedMessage());
 //                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
-                    continue;
                 }
                 PreparedStatement preparedStatementPlayer = connect.prepareStatement(sqlInsertSqua);
                 preparedStatementPlayer.setString(1, p.urlName);
                 preparedStatementPlayer.setString(2, teamUrl);
-                preparedStatementPlayer.executeUpdate();
+                try{
+                    preparedStatementPlayer.executeUpdate();
+                }catch(SQLException ex){
+                    System.out.println("Уже добавлен в состав " + ex.getLocalizedMessage());
+//                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 connect.commit();
             } catch (SQLException ex) {
                 Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
@@ -223,7 +227,7 @@ public class DBRequest {
     }
     
     ArrayList<Team> getTeams(String urlTournament){
-        String sql = "select tm.*\n" +
+        String sql = "select tm.*, t.url\n" +
                     "from tournament t, tournamnet_team tt, team tm\n" +
                     "where tt.team_id = tm.id\n" +
                     "and tt.tournament_id = t.id\n" +
@@ -242,10 +246,12 @@ public class DBRequest {
                 int teamId = resultSet.getInt("id");
                 String teamName = resultSet.getString("team_name");
                 String teamUrl = resultSet.getString("team_url");
+                String tournamnetUrl = resultSet.getString("t.url");
                 Team team = new Team();
                 team.id = teamId;
                 team.teamName = teamName;
                 team.urlName = teamUrl;
+                team.urlTournament = tournamnetUrl;
                 teams.add(team);
             }
         } catch (SQLException ex) {
@@ -333,8 +339,8 @@ public class DBRequest {
                         "        from tournament t, season s \n" +
                         "        where t.season_id = s.id and s.league_id = 3 and t.url = ?\n" +
                         ")\n" +
-//                        "and m.match_url in ('/match3015448', '/match3015586')";
-                        "and played = 2 and (select count(1) from player_in_match where match_id = m.id) = 0";
+                        "and m.match_url in ('/match3028954')";
+//                        "and played = 2 and (select count(1) from player_in_match where match_id = m.id) = 0";
         try {
             PreparedStatement preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, utlTournament);
@@ -427,6 +433,7 @@ public class DBRequest {
                 if (action.action.equals("Гол") || action.action.equals("Стандарт")){
                     //Обрабатываем только гол
                     addActionGoal(match_id, action, index, action.countAction);
+                    index += 2*action.countAction+1;
                 } else {
                     String sql;
                     switch(action.action){

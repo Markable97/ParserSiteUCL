@@ -35,11 +35,11 @@ public class ParserSiteUCL {
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         System.out.println("Начало парсинга");
 //        parserTournementMedia();
-//          parserTournementMediaOnly();
+          parserTournementMediaOnly();
 //        parserTeam();
 //        dopParserPlayer();
 //        parsingCalendar();
-        parserActionInMatch();
+//        parserActionInMatch();
         //parserSquad();
 //        parsingCalendar();
         //parsingTournamenttable();
@@ -66,7 +66,7 @@ public class ParserSiteUCL {
     static void parserTournementMedia() throws IOException{
         Document doc = Jsoup.connect("https://f-league.ru/tournament/1027651/photos").get();
         int tournamentId = 7;
-        String tourParser = "( 4 Тур)";
+        String tourParser = "(8 тур)";
         Elements lis = doc.select("li.photo__item");
         System.out.println("lis size = " + lis.size());
         ArrayList<Media> medias = new ArrayList<>();
@@ -93,11 +93,11 @@ public class ParserSiteUCL {
     }
     
     static void parserTournementMediaOnly(){
-        String albumUrl = "https://f-league.ru/tournament/1027996/photos/view?album_id=1091726";
-        int tournamentId = 5;
-        String tour = "6 тур";
-        String teamHome = "ФК Ещё Заиграю";
-        String teamGuest = "СКИФ-Мото";
+        String albumUrl = "https://f-league.ru/tournament/1027651/photos/view?album_id=1093893";
+        int tournamentId = 7;
+        String tour = "8 тур";
+        String teamHome = "Кайзерслаутерн";
+        String teamGuest = "Мика";
         Media media = new Media();
         media.urlAlbum = albumUrl;
         media.setTeamsAndTour(teamHome, teamGuest, tour);
@@ -148,7 +148,7 @@ public class ParserSiteUCL {
     
     static void parserActionInMatch() throws IOException, InterruptedException{
         DBRequest dbr = new DBRequest();
-        ArrayList<Match> matches = dbr.getMatchesForParser("5 тур");
+        ArrayList<Match> matches = dbr.getMatchesForParser("8 тур");
         for(Match m : matches){
             System.out.println(m.urlMatch);
             Document doc = Jsoup.connect("https://f-league.ru"+m.urlMatch).get();

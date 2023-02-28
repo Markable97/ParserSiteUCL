@@ -8,11 +8,13 @@ package lfl_vao;
 import com.mycompany.parsersiteucl.Action;
 import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -27,14 +29,20 @@ public class ParserLflVao {
     private final static int TYPE_ACTION_SCHEDULE = 2;
     private final static int TYPE_ACTION_RESULT = 3;
     
-//    https://lfl.ru/?ajax=1&method=player_stats_table&tournament_id=0&player_id=11471&season_id=45
 //    Штука через, которую будем проверять действия в матчах
+//    https://lfl.ru/?ajax=1&method=player_stats_table&tournament_id=0&player_id=11471&season_id=45
+//    Быстрый запрос для получения игроков в команде. По нему буду смотреть текущий состав и если что добавлять
+//    https://lfl.ru/?ajax=1&method=tournament_squads_table&tournament_id=18741&club_id=2340 
+//    Запрос на трансферы
+//    https://lfl.ru/?ajax=1&method=tournament_transfers_table&tournament_id=18634&division_id=0&club_id=717
     
     
+    //Чтобы спарсить результаты матчей, надо вызывать parserTournamentSquads, чтобы обновить игроков в командах и\или добавить новых
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
 //        updateUrlSquad();
         parserResultActions();
 //        parserAllMatch(TYPE_ACTION_RESULT);
+//        parserTournamentSquads();
 //        parserTeamSquad();
            //parserTeam();
     }
@@ -46,18 +54,21 @@ public class ParserLflVao {
     * https://lfl.ru/tournament18635 - 2А
     * https://lfl.ru/tournament18636 - 2В
     * https://lfl.ru/tournament18741 - Третий
+    * https://lfl.ru/tournament19160 - Кубок
     **/
     private static void parserResultActions(){
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18741";
+        String urlTournament = "/tournament19160";
         boolean isHighDivision = false;
         ArrayList<String> errorUrls = new ArrayList<>();
         ArrayList<MatchForParser> matches = db.getMatchesForParsingAction(urlTournament);
         //matches.add(new MatchForParser("/match3013562", 1));
-        matches.forEach((match) -> {
+        matches.forEach((match) -> { 
             try {
                 System.out.println("-----------------------" + match.url + "------------------------------");
                 String urlParser = "https://lfl.ru" + match.url;
+//                File input = new File("D:\\Загрузки\\result.html");
+//                Document doc = Jsoup.parse(input, "Windows-1251");
                 Document doc = SSLHelper.getConnection(urlParser).get();
                 Element divMatchRight = doc.selectFirst("div.match_right");
                 Boolean isCheckTypeNextBlock = true;
@@ -69,7 +80,12 @@ public class ParserLflVao {
                         String textElement = element.text();
                         String textTag = element.normalName();
                         type = ParserLflHelper.typeNextBlock(textTag, textElement);
-                        isCheckTypeNextBlock = false;
+                        if(type == ParserLflHelper.TYPE_TRANSFER) {
+                            isCheckTypeNextBlock = true;
+                        } else {
+                            isCheckTypeNextBlock = false;
+                        }
+                        
                     } else {
                         isCheckTypeNextBlock = true;
                         switch(type){
@@ -115,7 +131,7 @@ public class ParserLflVao {
                 match.actions = acctions;
                 db.addMatchAction(match);
                 System.out.println("Чутка подождем, чтобы не забанили");
-                Thread.sleep(5000);
+                Thread.sleep(6000);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(ParserLflVao.class.getName()).log(Level.SEVERE, null, ex);
                 errorUrls.add(match.url);
@@ -139,7 +155,7 @@ public class ParserLflVao {
         String method;
         switch(typeAction){
             case TYPE_ACTION_INFO:
-                method = "";
+                method = "tournament_calendar_table";
                 break;
             case TYPE_ACTION_SCHEDULE: 
                 method = "tournament_calendar_table";
@@ -156,6 +172,7 @@ public class ParserLflVao {
             System.out.println("-----------------------" + tournament + "------------------------------");
             String idTournamnet = tournament.replaceAll("\\D+","");
             String urlParser = "https://lfl.ru/?ajax=1&method="+method+"&tournament_id=" +idTournamnet+ "&limit=400";
+            System.out.println("-----------------------" + urlParser + "------------------------------");
             Document doc = SSLHelper.getConnection(urlParser).get();
             Element tbody = doc.selectFirst("tbody");
             if(tbody != null) {
@@ -226,6 +243,41 @@ public class ParserLflVao {
                 db.updatePlayersUrl(team, players);
             }
             
+        }
+    }
+    
+    /**
+    *
+    * urlTournament - если null возьмет все команды для данной лиги, если указать, для конкретного дивизиона
+    * https://lfl.ru/tournament18633 - Высший
+    * https://lfl.ru/tournament18634 - Первый
+    * https://lfl.ru/tournament18635 - 2А
+    * https://lfl.ru/tournament18636 - 2В
+    * https://lfl.ru/tournament18741 - Третий
+    */
+    private static void parserTournamentSquads() throws IOException, InterruptedException {
+        DBRequest db = new DBRequest();
+        String urlTournament = "/tournament18636"; 
+        ArrayList<Team> teams = db.getTeams(urlTournament);
+        for(Team team : teams){
+            String urlFormatter = "https://lfl.ru/?ajax=1&method=tournament_squads_table&tournament_id=%s&club_id=%s";
+            String urlParser = String.format(urlFormatter, team.urlTournament.replaceAll("\\D+",""), team.urlName.replaceAll("\\D+",""));
+            System.out.println(urlParser);
+            Document doc = SSLHelper.getConnection(urlParser).get();
+            Elements trPlayers = doc.select("tr");
+            ArrayList<Player> players = new ArrayList<>();
+            boolean isSkip = true;
+            for(Element trPlayer : trPlayers) {
+                if(isSkip) { isSkip = false; continue; }
+                String className = trPlayer.className();
+                if(className != null && (className.equals("grey_line") || className.equals("white_line"))){
+                    Player player = new Player();
+                    player.parserLflFastStatistic(trPlayer);
+                    players.add(player);
+//                    System.out.println(player);
+                }
+            }
+            db.addedPlayers(team.urlName, players);
         }
     }
     

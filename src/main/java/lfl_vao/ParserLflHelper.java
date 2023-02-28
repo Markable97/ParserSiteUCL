@@ -23,9 +23,14 @@ public class ParserLflHelper {
     final static int TYPE_ASSISTENTS = 3;
     final static int TYPE_WARNINGS = 4;
     final static int TYPE_PENALTY_OUT = 5;
+    final static int TYPE_TRANSFER = -2;
     final static int TYPE_UNKNOWS = -1;
     
     static int typeNextBlock(String tag, String textTag) {
+        System.out.println("text = " + textTag + " tag = " + tag);
+        if (textTag.contains("Перенос") && tag.equals("div")){
+            return TYPE_TRANSFER;
+        }
         if (textTag.equals("Составы:") && tag.equals("p")) {
             return TYPE_SQUADS;
         }

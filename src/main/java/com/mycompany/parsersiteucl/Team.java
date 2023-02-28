@@ -18,6 +18,7 @@ public class Team {
     public int id;
     public String teamName;
     String nameDivision;
+    public String urlTournament;
     public String urlName;
     public String urlImage;
     int countPlayers;

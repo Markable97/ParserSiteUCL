@@ -69,6 +69,16 @@ public class Player {
         urlName = aPlayer.attr("href");
         String nameInfo = aPlayer.text().replaceAll("[^a-zA-Zа-яёА-ЯЁ -]", "").trim();
         name = nameInfo;
+    } 
+    
+    public void parserLflFastStatistic(Element trPlayer) {
+        birthday = "";
+        Element tdPlayerInfo = trPlayer.selectFirst("td.left_align_table.FIO");       
+        amplua = tdPlayerInfo.selectFirst("span").text();
+        Element aName = tdPlayerInfo.selectFirst("a.player");
+        urlName = aName.attr("href");
+        name = aName.text();
+        urlPictures = tdPlayerInfo.selectFirst("a.usr-image_link").attr("style").replace("background: url(", "").replace(") no-repeat center center; background-size: contain;", "");
     }
     
   
