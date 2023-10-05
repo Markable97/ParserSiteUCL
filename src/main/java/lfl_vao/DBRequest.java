@@ -60,7 +60,7 @@ public class DBRequest {
                     System.out.println("матч добавлен +++++++++++++++++++++++");
                 } catch (SQLException ex) {
                     System.out.println("матч уже был добавлен в расписание !!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(DBRequest.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else {
                 System.out.println("матч не подходит под добавления ----------------------------");
@@ -339,8 +339,8 @@ public class DBRequest {
                         "        from tournament t, season s \n" +
                         "        where t.season_id = s.id and s.league_id = 3 and t.url = ?\n" +
                         ")\n" +
-                        "and m.match_url in ('/match3028954')";
-//                        "and played = 2 and (select count(1) from player_in_match where match_id = m.id) = 0";
+//                        "and m.match_url in ('/match3015526')";
+                        "and played = 2 and (select count(1) from player_in_match where match_id = m.id) = 0";
         try {
             PreparedStatement preparedStatement = connect.prepareStatement(sql);
             preparedStatement.setString(1, utlTournament);

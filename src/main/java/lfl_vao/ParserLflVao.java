@@ -36,17 +36,17 @@ public class ParserLflVao {
 //    Запрос на трансферы
 //    https://lfl.ru/?ajax=1&method=tournament_transfers_table&tournament_id=18634&division_id=0&club_id=717
     
-    
+    /**
+     * Логика парсинга
+     * 1) Изначально надо обновить актуальный состав команд. Метод parserTournamentSquads() (не забыть все турниры). Данный метод быстро парсит через ajax запрос
+     * 2) Дальше вызывается метод parserAllMatch() c параметром TYPE_ACTION_RESULT -> parserAllMatch(TYPE_ACTION_RESULT). 
+     *    Метод с данным параметром вызывается, чтобы проставить счет в матчи. Матчи должны быть добавлены в календарь
+     * 3) Дальше надо спарсить информацию о конкретном матче. Метод parserResultActions(url, highDivision) где,
+     *    url: String - сссылка на турниир, highDivision: Boolean - признак высший дивизион или нет (разная верстка на сайте у матчей)
+     *    !!! После парсинга посмотри лог и если надо добавить в ручную что-то !!!
+     * 4) Рассписание вызывается метод parserAllMatch() c параметром TYPE_ACTION_SCHEDULE -> parserAllMatch(TYPE_ACTION_SCHEDULE). 
+     **/
     //Чтобы спарсить результаты матчей, надо вызывать parserTournamentSquads, чтобы обновить игроков в командах и\или добавить новых
-    public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-//        updateUrlSquad();
-        parserResultActions();
-//        parserAllMatch(TYPE_ACTION_RESULT);
-//        parserTournamentSquads();
-//        parserTeamSquad();
-           //parserTeam();
-    }
-    
     /**
     * urlTournament - ссылка турнира, если отсутсвует, все матчи
     * https://lfl.ru/tournament18633 - Высший
@@ -56,10 +56,39 @@ public class ParserLflVao {
     * https://lfl.ru/tournament18741 - Третий
     * https://lfl.ru/tournament19160 - Кубок
     **/
-    private static void parserResultActions(){
+    
+    public static void main(String[] args) throws IOException, SQLException, InterruptedException{
+        parserTournamentTable();
+//        updateUrlSquad();
+//        parserResultActions("/tournament19160", false);
+//        parserAllMatch(TYPE_ACTION_RESULT);
+//        parserTournamentSquads("/tournament18741");
+//          parserTournamentSquadsAll();
+//        parserTeamSquad();
+//           parserTeam();
+    }
+    
+    private static void parserTournamentTable() throws IOException, SQLException {
+        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741"};
+        TournamentTableParser parser = new TournamentTableParser();
+        for(String id : ids) {
+            String url = "https://lfl.ru/?ajax=1&method=tournament_stats_table&tournament_id=" + id;
+            parser.inserTableInDB(url, id);
+        }
+    }
+    
+    private static void parserTournamentSquadsAll() throws IOException, InterruptedException{
+        parserTournamentSquads("/tournament18633");
+        parserTournamentSquads("/tournament18634");
+        parserTournamentSquads("/tournament18635");
+        parserTournamentSquads("/tournament18636");
+        parserTournamentSquads("/tournament18741");
+    }
+    
+    private static void parserResultActions(String url, boolean highDivision){
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament19160";
-        boolean isHighDivision = false;
+        String urlTournament = url;
+        boolean isHighDivision = highDivision;
         ArrayList<String> errorUrls = new ArrayList<>();
         ArrayList<MatchForParser> matches = db.getMatchesForParsingAction(urlTournament);
         //matches.add(new MatchForParser("/match3013562", 1));
@@ -255,9 +284,9 @@ public class ParserLflVao {
     * https://lfl.ru/tournament18636 - 2В
     * https://lfl.ru/tournament18741 - Третий
     */
-    private static void parserTournamentSquads() throws IOException, InterruptedException {
+    private static void parserTournamentSquads(String url) throws IOException, InterruptedException {
         DBRequest db = new DBRequest();
-        String urlTournament = "/tournament18636"; 
+        String urlTournament = url; 
         ArrayList<Team> teams = db.getTeams(urlTournament);
         for(Team team : teams){
             String urlFormatter = "https://lfl.ru/?ajax=1&method=tournament_squads_table&tournament_id=%s&club_id=%s";
@@ -278,6 +307,8 @@ public class ParserLflVao {
                 }
             }
             db.addedPlayers(team.urlName, players);
+            System.out.println("!!!!!!!!!!!!!!!!!!!!Подождем, чтобы не забанили!!!!!!!!!!!!!!!!!!!");
+            Thread.sleep(1500);
         }
     }
     
