@@ -46,10 +46,6 @@ public class TournamentTableParser {
         dbConnect = new DBConnection().connect;
     }
 
-    private int parseInt(String text) {
-        return Integer.parseInt(text.trim());
-    }
-
     ArrayList<TournamentTable> parserTournamentTable(String tournamentUrl) throws IOException {
         Document doc = SSLHelper.getConnection(tournamentUrl).get();
         Element tbody = doc.selectFirst("tbody");
@@ -65,7 +61,7 @@ public class TournamentTableParser {
                     case 0:
                         //Позиция
                         String position = td.text();
-                        table.position = parseInt(position);
+                        table.position = ParserLflHelper.parseInt(position);
                         break;
                     case 1:
                         //Фотка
@@ -82,34 +78,34 @@ public class TournamentTableParser {
                         break;
                     case 3:
                         //Игры
-                        table.games = parseInt(td.text());
+                        table.games = ParserLflHelper.parseInt(td.text());
                         break;
                     case 4:
                         //Победа
-                        table.wins = parseInt(td.text());
+                        table.wins = ParserLflHelper.parseInt(td.text());
                         break;
                     case 5:
-                        table.draws = parseInt(td.text());
+                        table.draws = ParserLflHelper.parseInt(td.text());
                         //Ничьи
                         break;
                     case 6:
-                        table.losses = parseInt(td.text());
+                        table.losses = ParserLflHelper.parseInt(td.text());
                         //Поражения
                         break;
                     case 7:
-                        table.goals_scored = parseInt(td.text());
+                        table.goals_scored = ParserLflHelper.parseInt(td.text());
                         //Забитые
                         break;
                     case 8:
-                        table.goals_conceded = parseInt(td.text());
+                        table.goals_conceded = ParserLflHelper.parseInt(td.text());
                         //Пропущеные
                         break;
                     case 9:
-                        table.goals_diferences = parseInt(td.text());
+                        table.goals_diferences = ParserLflHelper.parseInt(td.text());
                         //Разница
                         break;
                     case 10:
-                        table.points = parseInt(td.text());
+                        table.points = ParserLflHelper.parseInt(td.text());
                         //Очки
                         break;
                 }

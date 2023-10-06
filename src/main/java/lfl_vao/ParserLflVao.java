@@ -8,13 +8,11 @@ package lfl_vao;
 import com.mycompany.parsersiteucl.Action;
 import com.mycompany.parsersiteucl.Player;
 import com.mycompany.parsersiteucl.Team;
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -58,7 +56,8 @@ public class ParserLflVao {
     **/
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        parserTournamentTable();
+        //parserTournamentTable();
+        parserMatches();
 //        updateUrlSquad();
 //        parserResultActions("/tournament19160", false);
 //        parserAllMatch(TYPE_ACTION_RESULT);
@@ -66,6 +65,14 @@ public class ParserLflVao {
 //          parserTournamentSquadsAll();
 //        parserTeamSquad();
 //           parserTeam();
+    }
+    
+    private static void parserMatches() throws IOException, SQLException {
+        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741"};
+        MatchesParser parser = new MatchesParser();
+        for(String id : ids) {
+            parser.parser(id);
+        }
     }
     
     private static void parserTournamentTable() throws IOException, SQLException {

@@ -26,6 +26,10 @@ public class ParserLflHelper {
     final static int TYPE_TRANSFER = -2;
     final static int TYPE_UNKNOWS = -1;
     
+    static int parseInt(String text) {
+        return Integer.parseInt(text.trim());
+    }
+    
     static int typeNextBlock(String tag, String textTag) {
         System.out.println("text = " + textTag + " tag = " + tag);
         if (textTag.contains("Перенос") && tag.equals("div")){
