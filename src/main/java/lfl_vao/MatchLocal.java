@@ -54,7 +54,7 @@ public class MatchLocal {
         this.teamHomeImage = teamHome.selectFirst("img").attr("src");
         this.teamGuest = teamGuest.attr("title");
         this.teamGuestUrl = teamGuest.absUrl("href");
-        this.teamGuestImage = teamHome.selectFirst("img").attr("src");
+        this.teamGuestImage = teamGuest.selectFirst("img").attr("src");
         
         
         Element score = tds.get(4);
