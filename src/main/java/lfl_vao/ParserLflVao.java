@@ -57,6 +57,7 @@ public class ParserLflVao {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         //parserTournamentTable();
+        //parserTournamentStatistic();
         parserMatches();
 //        updateUrlSquad();
 //        parserResultActions("/tournament19160", false);
@@ -75,8 +76,16 @@ public class ParserLflVao {
         }
     }
     
-    private static void parserTournamentTable() throws IOException, SQLException {
+    private static void parserTournamentStatistic() throws IOException, SQLException {
         String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741"};
+        StatisticsParser parser = new StatisticsParser();
+        for(String id : ids) {
+            parser.parserStatistics(id);
+        }
+    }
+    
+    private static void parserTournamentTable() throws IOException, SQLException {
+        String[] ids = new String[] {/*"18633", "18634", "18635", "18636",*/ "18741"};
         TournamentTableParser parser = new TournamentTableParser();
         for(String id : ids) {
             String url = "https://lfl.ru/?ajax=1&method=tournament_stats_table&tournament_id=" + id;
