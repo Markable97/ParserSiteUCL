@@ -38,13 +38,15 @@ public class StatisticsParser {
         String playerName;
         String playerImage;
         String playerTeam;
+        String playerTeamUrl;
+        String amplua;
         int amount;
 
         @Override
         public String toString() {
-            return "Statistic{" + "tournamentUrl=" + tournamentUrl + ", playerUrl=" + playerUrl + ", action=" + action + ", playerName=" + playerName + ", playerImage=" + playerImage + ", playerTeam=" + playerTeam + ", amount=" + amount + "}\n";
+            return "Statistic{" + "tournamentUrl=" + tournamentUrl + ", playerUrl=" + playerUrl + ", action=" + action + ", playerName=" + playerName + ", playerImage=" + playerImage + ", playerTeam=" + playerTeam + ", playerTeamUrl=" + playerTeamUrl + ", amplua=" + amplua + ", amount=" + amount + "}\n";
         }
-        
+
         
     }
     
@@ -86,18 +88,23 @@ public class StatisticsParser {
             statistic.playerUrl = aPlayerName.absUrl("href");
             String styleImage = tdPlayer.select("a.usr-image_link").attr("style").split(";")[0];
             statistic.playerImage = styleImage.split(" ")[1].replace("url(", "").replace(")", "");
+            statistic.amplua = tdPlayer.selectFirst("span.amplua").text();
             //TEAM
             Element tdTeam = tds.get(2);
             Element ulTeam = tdTeam.selectFirst("ul");
             if(ulTeam != null) {
                 Elements lis =  ulTeam.select("li");
                 ArrayList<String> teams = new ArrayList<>();
+                ArrayList<String> teamsUrls = new ArrayList<>();
                 for(Element li : lis) {
                     teams.add(li.text().trim());
+                    teamsUrls.add(li.selectFirst("a.club").absUrl("href"));
                 }
                 statistic.playerTeam = teams.toString().replace("[", "").replace("]", "");
+                statistic.playerTeamUrl = teamsUrls.toString().replace("[", "").replace("]", "");
             } else {
                 statistic.playerTeam = tdTeam.text();
+                statistic.playerTeamUrl = tdTeam.selectFirst("a.club").absUrl("href");
             }
             //Amount
             statistic.amount = Integer.parseInt(tds.get(3).text());
@@ -112,9 +119,10 @@ public class StatisticsParser {
     
     
     void inserOrUpdateDB(ArrayList<Statistic> statistics) throws SQLException {
-        String sql = "INSERT INTO tournament_statistics (tournament_url, player_url, action, player_name, player_image, player_team, amount)\n" +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)\n" +
-                     "ON DUPLICATE KEY UPDATE player_name = VALUES(player_name), player_image = VALUES(player_image), player_team = VALUES(player_team), amount = VALUES(amount);";
+        String sql = "INSERT INTO tournament_statistics (tournament_url, player_url, action, player_name, player_image, player_team, amplua, amount)\n" +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n" +
+                     "ON DUPLICATE KEY UPDATE player_name = VALUES(player_name), player_image = VALUES(player_image), player_team = VALUES(player_team), " +
+                     "amplua = VALUES(amplua), amount = VALUES(amount);";
         for(Statistic st : statistics) {
             PreparedStatement ps = dbConnect.prepareStatement(sql);
             ps.setString(1, st.tournamentUrl);
@@ -123,7 +131,8 @@ public class StatisticsParser {
             ps.setString(4, st.playerName);
             ps.setString(5, st.playerImage);
             ps.setString(6, st.playerTeam);
-            ps.setInt(7, st.amount);
+            ps.setString(7, st.amplua);
+            ps.setInt(8, st.amount);
             ps.executeUpdate();
         }
     }
