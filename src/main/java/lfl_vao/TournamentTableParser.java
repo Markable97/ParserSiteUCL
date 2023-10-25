@@ -71,7 +71,7 @@ public class TournamentTableParser {
                     case 2:
                         //Название команды
                         Element a = td.selectFirst("a");
-                        String url = a.absUrl("href");
+                        String url = a.attr("href");
                         String name = a.text();
                         table.teamUrl = url;
                         table.teamName = name;

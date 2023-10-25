@@ -50,10 +50,10 @@ public class MatchLocal {
         this.tour = tds.get(0).text();
         this.url = date.attr("href");
         this.teamHome = teamHome.attr("title");
-        this.teamHomeUrl = teamHome.absUrl("href");
+        this.teamHomeUrl = teamHome.attr("href");
         this.teamHomeImage = teamHome.selectFirst("img").attr("src");
         this.teamGuest = teamGuest.attr("title");
-        this.teamGuestUrl = teamGuest.absUrl("href");
+        this.teamGuestUrl = teamGuest.attr("href");
         this.teamGuestImage = teamGuest.selectFirst("img").attr("src");
         
         
