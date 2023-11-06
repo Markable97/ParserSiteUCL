@@ -35,6 +35,7 @@ public class TournamentTableParser {
         int goals_conceded;
         int goals_diferences;
         int points;
+        String colorPosition;
 
         @Override
         public String toString() {
@@ -45,7 +46,21 @@ public class TournamentTableParser {
     public TournamentTableParser() {
         dbConnect = new DBConnection().connect;
     }
-
+    
+    private String getColorPosition(String attrClass) {
+        String colorHex = null;
+        if(attrClass.contains("up_selected")){
+            colorHex = "e4f7e3";
+        } else if (attrClass.contains("up2_selected")) {
+            colorHex = "FEFFDB";
+        } else if (attrClass.contains("down_selected")) {
+            colorHex = "FFD5CF";
+        } else if (attrClass.contains("down2_selected")) {
+            colorHex = "FFEDEA";
+        }
+        return colorHex;
+    }
+    
     ArrayList<TournamentTable> parserTournamentTable(String tournamentUrl) throws IOException {
         Document doc = SSLHelper.getConnection(tournamentUrl).get();
         Element tbody = doc.selectFirst("tbody");
@@ -54,6 +69,7 @@ public class TournamentTableParser {
         Elements trs = tbody.select("tr");
         trs.forEach(tr -> {
             TournamentTable table = new TournamentTable();
+            table.colorPosition = getColorPosition(tr.attr("class"));
             Elements tds = tr.select("td");
             int index = 0;
             for(Element td : tds) {
@@ -131,8 +147,8 @@ public class TournamentTableParser {
     }
     
     private void addTable(String tournamentUrl, ArrayList<TournamentTable> tableList) throws SQLException {
-        String sql = "INSERT INTO tournament_table (tournament_url, position, team_image, team_url, team_name, games, wins, draws, losses, goals_scored, goals_conceded, goals_difference, points)"
-                + "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO tournament_table (tournament_url, position, team_image, team_url, team_name, games, wins, draws, losses, goals_scored, goals_conceded, goals_difference, points, color_position)"
+                + "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         for(TournamentTable tableRow : tableList) {
             PreparedStatement prStatement = dbConnect.prepareStatement(sql);
             prStatement.setString(1, tournamentUrl);
@@ -148,6 +164,7 @@ public class TournamentTableParser {
             prStatement.setInt(11, tableRow.goals_conceded);
             prStatement.setInt(12, tableRow.goals_diferences);
             prStatement.setInt(13, tableRow.points);
+            prStatement.setString(14, tableRow.colorPosition);
             prStatement.executeUpdate();
         }
     }

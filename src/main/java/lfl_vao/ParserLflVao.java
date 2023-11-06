@@ -56,9 +56,9 @@ public class ParserLflVao {
     **/
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        //parserTournamentTable();
+        parserTournamentTable();
         //parserTournamentStatistic();
-        parserMatches();
+        //parserMatches();
 //        updateUrlSquad();
 //        parserResultActions("/tournament19160", false);
 //        parserAllMatch(TYPE_ACTION_RESULT);
@@ -69,7 +69,7 @@ public class ParserLflVao {
     }
     
     private static void parserMatches() throws IOException, SQLException {
-        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741"/*, "19160"*/};
+        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741", "19160"};
         MatchesParser parser = new MatchesParser();
         for(String id : ids) {
             parser.parser(id);
@@ -77,7 +77,7 @@ public class ParserLflVao {
     }
     
     private static void parserTournamentStatistic() throws IOException, SQLException {
-        String[] ids = new String[] {/*"18633", "18634", "18635", "18636", "18741",*/ "19160"};
+        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741", "19160"};
         StatisticsParser parser = new StatisticsParser();
         for(String id : ids) {
             parser.parserStatistics(id);

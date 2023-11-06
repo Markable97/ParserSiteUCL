@@ -85,7 +85,7 @@ public class StatisticsParser {
             Element tdPlayer = tds.get(1);
             Element aPlayerName = tdPlayer.selectFirst("a.player");
             statistic.playerName = aPlayerName.text();
-            statistic.playerUrl = aPlayerName.absUrl("href");
+            statistic.playerUrl = aPlayerName.attr("href");
             String styleImage = tdPlayer.select("a.usr-image_link").attr("style").split(";")[0];
             statistic.playerImage = styleImage.split(" ")[1].replace("url(", "").replace(")", "");
             statistic.amplua = tdPlayer.selectFirst("span.amplua").text();
@@ -98,13 +98,13 @@ public class StatisticsParser {
                 ArrayList<String> teamsUrls = new ArrayList<>();
                 for(Element li : lis) {
                     teams.add(li.text().trim());
-                    teamsUrls.add(li.selectFirst("a.club").absUrl("href"));
+                    teamsUrls.add(li.selectFirst("a.club").attr("href"));
                 }
                 statistic.playerTeam = teams.toString().replace("[", "").replace("]", "");
                 statistic.playerTeamUrl = teamsUrls.toString().replace("[", "").replace("]", "");
             } else {
                 statistic.playerTeam = tdTeam.text();
-                statistic.playerTeamUrl = tdTeam.selectFirst("a.club").absUrl("href");
+                statistic.playerTeamUrl = tdTeam.selectFirst("a.club").attr("href");
             }
             //Amount
             statistic.amount = Integer.parseInt(tds.get(3).text());
