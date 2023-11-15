@@ -56,9 +56,9 @@ public class ParserLflVao {
     **/
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        parserTournamentTable();
-        //parserTournamentStatistic();
-        //parserMatches();
+        //parserTournamentTable();
+        parserTournamentStatistic();
+        parserMatches();
 //        updateUrlSquad();
 //        parserResultActions("/tournament19160", false);
 //        parserAllMatch(TYPE_ACTION_RESULT);

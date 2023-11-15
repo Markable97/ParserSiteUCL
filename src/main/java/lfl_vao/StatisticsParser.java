@@ -78,7 +78,7 @@ public class StatisticsParser {
         Elements trs = tbody.select("tr");
         for(Element tr : trs) {
             Statistic statistic = new Statistic();
-            statistic.tournamentUrl = tournamnetUrl;
+            statistic.tournamentUrl = "/tournament" + tournamnetUrl;
             statistic.action = action;
             Elements tds = tr.select("td");
             //Player

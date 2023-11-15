@@ -33,7 +33,7 @@ public class MatchesParser {
         System.out.println("----------CALENDAR------------------------");
         ArrayList<MatchLocal> calendar = parserResults(calendarAjax);
         results.addAll(calendar);
-        inserOrUpdateDB(results, id);
+        inserOrUpdateDB(results, "/tournament" + id);
     }
     
     ArrayList<MatchLocal> parserResults(String url) throws IOException {

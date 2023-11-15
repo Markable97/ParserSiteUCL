@@ -136,7 +136,7 @@ public class TournamentTableParser {
     void inserTableInDB(String tournamentUrl, String tournamentId) throws IOException, SQLException {
         ArrayList<TournamentTable> tableList = parserTournamentTable(tournamentUrl);
         clearTable(tournamentId);
-        addTable(tournamentId, tableList);
+        addTable("/tournament" + tournamentId, tableList);
     }
     
     private void clearTable(String tournamentUrl) throws SQLException {
