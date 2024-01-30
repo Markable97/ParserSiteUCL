@@ -56,9 +56,15 @@ public class StatisticsParser {
     
     
     void parserStatistics(String tournamentUrl) throws IOException, SQLException {
-        String ajaxGoals = String.format("https://lfl.ru/?ajax=1&method=tournament_strikers_table&tournament_id=%s", tournamentUrl);
-        String ajaxAssist = String.format("https://lfl.ru/?ajax=1&method=tournament_assistants_table&tournament_id=%s&limit=400", tournamentUrl);
-        String ajaxYellow = String.format("https://lfl.ru/?ajax=1&method=tournament_cardsY_table&tournament_id=%s&limit=400", tournamentUrl);
+        String id;
+        if(tournamentUrl.contains("division")) {
+            id = tournamentUrl.replace("/division", "");
+        } else {
+            id = tournamentUrl.replace("/tournament", "");
+        }
+        String ajaxGoals = String.format("https://lfl.ru/?ajax=1&method=tournament_strikers_table&tournament_id=%s", id);
+        String ajaxAssist = String.format("https://lfl.ru/?ajax=1&method=tournament_assistants_table&tournament_id=%s&limit=400", id);
+        String ajaxYellow = String.format("https://lfl.ru/?ajax=1&method=tournament_cardsY_table&tournament_id=%s&limit=400", id);
         
         ArrayList<Statistic> goals = parserStatisticsInternal(ajaxGoals, Action.GOALS, tournamentUrl);
         inserOrUpdateDB(goals);
@@ -78,7 +84,7 @@ public class StatisticsParser {
         Elements trs = tbody.select("tr");
         for(Element tr : trs) {
             Statistic statistic = new Statistic();
-            statistic.tournamentUrl = "/tournament" + tournamnetUrl;
+            statistic.tournamentUrl = tournamnetUrl;
             statistic.action = action;
             Elements tds = tr.select("td");
             //Player

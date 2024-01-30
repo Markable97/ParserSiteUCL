@@ -4,6 +4,7 @@
  */
 package lfl_vao;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -62,12 +63,17 @@ public class TournamentTableParser {
     }
     
     ArrayList<TournamentTable> parserTournamentTable(String tournamentUrl) throws IOException {
+//        File input = new File("D:\\Загрузки\\lfl.ru.html");
+//        Document doc = Jsoup.parse(input, "Windows-1251");
         Document doc = SSLHelper.getConnection(tournamentUrl).get();
         Element tbody = doc.selectFirst("tbody");
         if (tbody == null) throw new NullPointerException("tbody not find");
         ArrayList<TournamentTable> tableList = new ArrayList<>(); 
         Elements trs = tbody.select("tr");
         trs.forEach(tr -> {
+            if(tr.text().contains("Шахматка")) {
+                return;
+            }
             TournamentTable table = new TournamentTable();
             table.colorPosition = getColorPosition(tr.attr("class"));
             Elements tds = tr.select("td");
@@ -136,7 +142,7 @@ public class TournamentTableParser {
     void inserTableInDB(String tournamentUrl, String tournamentId) throws IOException, SQLException {
         ArrayList<TournamentTable> tableList = parserTournamentTable(tournamentUrl);
         clearTable(tournamentId);
-        addTable("/tournament" + tournamentId, tableList);
+        addTable(tournamentId, tableList);
     }
     
     private void clearTable(String tournamentUrl) throws SQLException {

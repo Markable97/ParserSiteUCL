@@ -56,9 +56,11 @@ public class ParserLflVao {
     **/
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
-        //parserTournamentTable();
-        parserTournamentStatistic();
-        parserMatches();
+        //Сначала проверь для высшего дива как все парсится
+        String[] ids = new String[] {"/division995", "/tournament23457", "/tournament23472", "/tournament23473"};
+        parserTournamentTable(ids);
+        parserTournamentStatistic(ids);
+        parserMatches(ids);
 //        updateUrlSquad();
 //        parserResultActions("/tournament19160", false);
 //        parserAllMatch(TYPE_ACTION_RESULT);
@@ -68,27 +70,29 @@ public class ParserLflVao {
 //           parserTeam();
     }
     
-    private static void parserMatches() throws IOException, SQLException {
-        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741", "19160"};
+    private static void parserMatches(String[] ids) throws IOException, SQLException {
         MatchesParser parser = new MatchesParser();
         for(String id : ids) {
             parser.parser(id);
         }
     }
     
-    private static void parserTournamentStatistic() throws IOException, SQLException {
-        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741", "19160"};
+    private static void parserTournamentStatistic(String[] ids) throws IOException, SQLException {
         StatisticsParser parser = new StatisticsParser();
-        for(String id : ids) {
-            parser.parserStatistics(id);
+        for(String url : ids) {
+            parser.parserStatistics(url);
         }
     }
     
-    private static void parserTournamentTable() throws IOException, SQLException {
-        String[] ids = new String[] {"18633", "18634", "18635", "18636", "18741"};
+    private static void parserTournamentTable(String[] ids) throws IOException, SQLException {
         TournamentTableParser parser = new TournamentTableParser();
         for(String id : ids) {
-            String url = "https://lfl.ru/?ajax=1&method=tournament_stats_table&tournament_id=" + id;
+            String url;
+            if(id.contains("division")) {
+                url = "https://lfl.ru/?ajax=1&method=tournament_stats_table&division_id=" + id.replace("/division", "");
+            } else {
+                url = "https://lfl.ru/?ajax=1&method=tournament_stats_table&tournament_id=" + id.replace("/tournament", "");
+            }
             parser.inserTableInDB(url, id);
         }
     }

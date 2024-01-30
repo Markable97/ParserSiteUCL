@@ -40,6 +40,44 @@ public class MatchLocal {
 
 
 
+    void parserMatchInfoLflDivision(Element tr) {
+        Elements tds = tr.select("td");
+        Element teamHome = tr.selectFirst("td.right_align_table").selectFirst("a"); //Не спрашивайте меня почему так PS перепутано право с левом
+        Element teamGuest = tr.selectFirst("td.left_align_table").selectFirst("a");
+        Element date = tds.get(0).selectFirst("a");
+        this.date = getDateWithoutDay(date.text());
+        this.time = tds.get(1).text();
+        this.tour = "";
+        this.url = date.attr("href");
+        this.teamHome = teamHome.attr("title");
+        this.teamHomeUrl = teamHome.attr("href");
+        this.teamHomeImage = teamHome.selectFirst("img").attr("src");
+        this.teamGuest = teamGuest.attr("title");
+        this.teamGuestUrl = teamGuest.attr("href");
+        this.teamGuestImage = teamGuest.selectFirst("img").attr("src");
+        
+        
+        Element score = tds.get(3);
+        Element aPhoto = score.selectFirst("a.gallery-icon");
+        Element aVideo = score.selectFirst("a.video-icon.video-icon-3");
+        if (aPhoto != null) {
+            this.photoUrl = aPhoto.absUrl("href");
+        }
+        if (aVideo != null) {
+            this.videoUrl = aVideo.absUrl("href");
+        }
+        String[] scores = score.text().split(":");
+        if(scores.length == 2) {
+            this.goalsHome = scores[0].trim();
+            this.goalsGuest = scores[1].trim();
+        } else {
+            this.goalsHome = "-";
+            this.goalsGuest = "-";
+        }
+        
+        stadium = tds.get(5).text();
+    }
+    
     void parserMatchInfoLfl(Element tr){
         Elements tds = tr.select("td");
         Element teamHome = tr.selectFirst("td.right_align_table").selectFirst("a"); //Не спрашивайте меня почему так PS перепутано право с левом
@@ -49,9 +87,9 @@ public class MatchLocal {
         this.time = tds.get(2).text();
         this.tour = tds.get(0).text();
         this.url = date.attr("href");
-        this.teamHome = teamHome.attr("title");
-        this.teamHomeUrl = teamHome.attr("href");
-        this.teamHomeImage = teamHome.selectFirst("img").attr("src");
+            this.teamHome = teamHome.attr("title");
+            this.teamHomeUrl = teamHome.attr("href");
+            this.teamHomeImage = teamHome.selectFirst("img").attr("src");
         this.teamGuest = teamGuest.attr("title");
         this.teamGuestUrl = teamGuest.attr("href");
         this.teamGuestImage = teamGuest.selectFirst("img").attr("src");

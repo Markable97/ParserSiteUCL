@@ -25,21 +25,37 @@ public class MatchesParser {
     }
     
     void parser(String id) throws IOException, SQLException {
-        String resultAjax = String.format("https://lfl.ru/?ajax=1&method=tournament_resault_table&tournament_id=%s&limit=400", id);
-        String calendarAjax = String.format("https://lfl.ru/?ajax=1&method=tournament_calendar_table&tournament_id=%s&limit=400", id);
+        String urlResult;
+        String urlCalendar;
+        boolean isDivision;
+        if(id.contains("division")) {
+            isDivision = true;
+            urlResult = "https://lfl.ru/?ajax=1&method=tournament_resault_table&division_id=%s&limit=400";
+            urlCalendar = "https://lfl.ru/?ajax=1&method=tournament_calendar_table&division_id=%s&limit=400";
+        } else {
+            isDivision = false;
+            urlResult = "https://lfl.ru/?ajax=1&method=tournament_resault_table&tournament_id=%s&limit=400";
+            urlCalendar = "https://lfl.ru/?ajax=1&method=tournament_calendar_table&tournament_id=%s&limit=400";
+        }
+        String resultAjax = String.format(urlResult, id.replaceAll("[^0-9]",""));
+        String calendarAjax = String.format(urlCalendar, id.replaceAll("[^0-9]",""));
         System.out.println("----------" + id + "------------------------");
         System.out.println("----------RESULT------------------------");
-        ArrayList<MatchLocal> results = parserResults(resultAjax);
+        ArrayList<MatchLocal> results = parserResults(resultAjax, isDivision);
         System.out.println("----------CALENDAR------------------------");
-        ArrayList<MatchLocal> calendar = parserResults(calendarAjax);
+        ArrayList<MatchLocal> calendar = parserResults(calendarAjax, isDivision);
         results.addAll(calendar);
-        inserOrUpdateDB(results, "/tournament" + id);
+        inserOrUpdateDB(results, id);
     }
     
-    ArrayList<MatchLocal> parserResults(String url) throws IOException {
+    ArrayList<MatchLocal> parserResults(String url, boolean isDivision) throws IOException {
         Document doc = SSLHelper.getConnection(url).get();
         Element tbody = doc.selectFirst("tbody");
-        if (tbody == null) throw new NullPointerException("tbody not find");
+        if (tbody == null) {
+            System.out.println(doc.text());
+            return new ArrayList<>();
+            //throw new NullPointerException("tbody not find");
+        }
         Elements trs = tbody.select("tr");
         ArrayList<MatchLocal> matches = new ArrayList<>();
         for(Element tr : trs){
@@ -48,7 +64,11 @@ public class MatchesParser {
                 System.out.println(tr.text());
             } else {
                 MatchLocal match = new MatchLocal();
-                match.parserMatchInfoLfl(tr);
+                if(isDivision) {
+                    match.parserMatchInfoLflDivision(tr);
+                } else {
+                    match.parserMatchInfoLfl(tr);
+                }
                 matches.add(match);
             }
         }
