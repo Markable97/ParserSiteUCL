@@ -57,14 +57,20 @@ public class StatisticsParser {
     
     void parserStatistics(String tournamentUrl) throws IOException, SQLException {
         String id;
+        String ajaxGoals;
+        String ajaxAssist;
+        String ajaxYellow;
         if(tournamentUrl.contains("division")) {
             id = tournamentUrl.replace("/division", "");
+            ajaxGoals = String.format("https://lfl.ru/?ajax=1&method=tournament_strikers_table&division_id=%s", id);
+            ajaxAssist = String.format("https://lfl.ru/?ajax=1&method=tournament_assistants_table&division_id=%s&limit=400", id);
+            ajaxYellow = String.format("https://lfl.ru/?ajax=1&method=tournament_cardsY_table&division_id=%s&limit=400", id);
         } else {
             id = tournamentUrl.replace("/tournament", "");
+            ajaxGoals = String.format("https://lfl.ru/?ajax=1&method=tournament_strikers_table&tournament_id=%s", id);
+            ajaxAssist = String.format("https://lfl.ru/?ajax=1&method=tournament_assistants_table&tournament_id=%s&limit=400", id);
+            ajaxYellow = String.format("https://lfl.ru/?ajax=1&method=tournament_cardsY_table&tournament_id=%s&limit=400", id);
         }
-        String ajaxGoals = String.format("https://lfl.ru/?ajax=1&method=tournament_strikers_table&tournament_id=%s", id);
-        String ajaxAssist = String.format("https://lfl.ru/?ajax=1&method=tournament_assistants_table&tournament_id=%s&limit=400", id);
-        String ajaxYellow = String.format("https://lfl.ru/?ajax=1&method=tournament_cardsY_table&tournament_id=%s&limit=400", id);
         
         ArrayList<Statistic> goals = parserStatisticsInternal(ajaxGoals, Action.GOALS, tournamentUrl);
         inserOrUpdateDB(goals);
