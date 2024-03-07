@@ -23,6 +23,105 @@ public class MatchesParser {
     public MatchesParser() {
         dbConnect = new DBConnection().connect;
     }
+
+    void parserExider() throws IOException, SQLException {
+        Document doc = SSLHelper.getConnection("https://exider.org/").get();
+        ArrayList<MatchLocal> calendar = new ArrayList<>();
+        Element divMain = doc.selectFirst("div.main");
+        Elements intoMain = divMain.children();
+        int countMainPlashka = 0;
+        String classNameMainPlashka = "main-plashka";
+        boolean isNeedContent = false;
+        for(Element el : intoMain) {
+            System.out.println("Ищем контент " + el.className());
+            if(el.className().equals(classNameMainPlashka)) {
+                System.out.println("Нащли плашку");
+                countMainPlashka++;
+                isNeedContent = countMainPlashka == 1;
+                if(countMainPlashka > 1) {
+                    System.out.println("Дальше все");
+                    break;
+                }
+            }
+            if(isNeedContent && !el.className().contains(classNameMainPlashka)) {
+                System.out.println("Подходящитй контент");
+                Elements liS = el.getElementsByTag("li");
+                if(liS == null) {
+                    System.out.println("Ошибка пропускаем элемент, не нашлись теги <li>");
+                    continue;
+                }
+                if(liS.isEmpty()) {
+                    System.out.println("Ошибка пропускаем элемент, не нашлись теги <li> [2]");
+                    continue;
+                }
+                for(Element li : liS) {
+                    Elements h2 = li.getElementsByTag("h2");
+                    if(h2 == null) {
+                        System.out.println("Ошибка пропускаем элемент, не нашелся заголовок <h2>");
+                        continue;
+                    }
+                    if(h2.isEmpty()) {
+                        System.out.println("Ошибка пропускаем элемент, не нашелся заголовок <h2> [2]");
+                        continue;
+                    }
+                    String title = h2.first().text();
+                    System.out.println("Заголовок = " + title);
+                    String[] titleSplit = title.split("-");
+                    if(titleSplit.length != 2) {
+                        System.out.println("Ошибка пропускаем элемент, заголовок не состоит из нужной комбинаци дивизион - тур size = " + titleSplit.length);
+                        continue;
+                    }
+                    String divisionName = titleSplit[0].trim();
+                    String tour = titleSplit[1].trim();
+                    Element table = li.selectFirst("table.on_main");
+                    if(table == null) {
+                        System.out.println("Ошибка пропускаем элемент, не нашелся тег table.on_mai");
+                        continue;
+                    }
+                    Elements trS = table.select("tr");
+                    boolean isHeader = true;
+                    for(Element tr : trS) {
+                        if(isHeader) {
+                            isHeader = false;
+                            continue;
+                        }
+                        MatchLocal match = new MatchLocal();
+                        Elements td = tr.select("td");
+                        String dateTime = td.get(0).text();
+                        String teams = td.get(1).text();
+                        String stadium = td.get(2).text();
+                        System.out.println(dateTime + " " + teams + " " + stadium);
+                        match.date = dateTime;
+                        String[] teamSplit = teams.split("/");
+                        match.teamHome = teamSplit[0].trim();
+                        match.teamGuest = teamSplit[1].trim();
+                        match.tour = tour.replaceAll("\\D+","");
+                        match.stadium = stadium;
+                        String url = getTournamentUrl(divisionName);
+                        if(url == null) {
+                            System.out.println("Ошибка пропускаем элемент, не нашелся tournamentUrl для " + divisionName);
+                            continue;
+                        }
+                        match.url = url;
+                        calendar.add(match);
+                    }
+                }
+            }
+        }
+        deleteAndInsertExiderCalendarDB(calendar);
+    }
+
+    private String getTournamentUrl(String divisionName) {
+        String url;
+        switch(divisionName) {
+            case "Высший дивизион": url = "/division995"; break;
+            case "Первый дивизион": url = "/tournament23457"; break;
+            case "Второй дивизион A": url = "/tournament23472"; break;
+            case "Второй дивизион B": url = "/tournament23473"; break;
+            default: url = null; break;
+        }
+        return url;
+    }
     
     void parser(String id) throws IOException, SQLException {
         String urlResult;
@@ -47,7 +146,7 @@ public class MatchesParser {
         results.addAll(calendar);
         inserOrUpdateDB(results, id);
     }
-    
+
     ArrayList<MatchLocal> parserResults(String url, boolean isDivision) throws IOException {
         Document doc = SSLHelper.getConnection(url).get();
         Element tbody = doc.selectFirst("tbody");
@@ -74,6 +173,25 @@ public class MatchesParser {
         }
         System.out.println(matches);
         return matches;
+    }
+
+    void deleteAndInsertExiderCalendarDB(ArrayList<MatchLocal> matches) throws SQLException {
+        String sql = "delete from match_from_exider where id > 0";
+        PreparedStatement ps = dbConnect.prepareStatement(sql);
+        ps.execute();
+        sql = "insert into match_from_exider (tournament_url, date, stadium, tour, team_home, team_guest)"
+                + "values (?, ?, ?, ?, ?, ?)";
+        for(MatchLocal m : matches) {
+            ps = dbConnect.prepareStatement(sql);
+            ps.setString(1, m.url);
+            ps.setString(2, m.date);
+            ps.setString(3, m.stadium);
+            ps.setString(4, m.tour);
+            ps.setString(5, m.teamHome);
+            ps.setString(6, m.teamGuest);
+            ps.executeUpdate();
+        }
+        
     }
     
     void inserOrUpdateDB(ArrayList<MatchLocal> matches, String toutnamentUrl) throws SQLException {
@@ -107,5 +225,5 @@ public class MatchesParser {
             ps.executeUpdate();
         }
     }
-    
+
 }
