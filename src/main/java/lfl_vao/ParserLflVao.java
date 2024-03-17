@@ -57,17 +57,31 @@ public class ParserLflVao {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         //Сначала проверь для высшего дива как все парсится
-        String[] ids = new String[] {"/division995", "/tournament23457", "/tournament23472", "/tournament23473"};
-        parserTournamentTable(ids);
+        String[] SZAO = new String[] {"/tournament23698", "/tournament23699", "/tournament23747", "/tournament23748", "/tournament23750", "/tournament23751"}; //Начало 17.02
+        
+        String[] UVAO = new String[] {"/tournament23560", "/tournament23563", "/tournament23582", "/tournament23583", "/tournament23620"};
+        String[] UAO = new String[] {};
+        String[] UZAO = new String[] {"/tournament23173", "/tournament23174", "/tournament23194", "/tournament23195"}; 
+        String[] ZAO = new String[] {"/tournament22934", "/tournament22935"}; //Начало 09.03
+        
+        String[] SAO = new String[] {"/tournament23419", "/tournament23420", "/tournament23543", "/tournament23546", "/tournament23471", "/tournament23545"}; //Идет
+        String[] SVAO = new String[] {"/tournament23459", "/tournament23561", "/tournament23547"}; //Идет и добавлено
+        String[] VAO = new String[] {/*"/division995", "/tournament23457", "/tournament23472", "/tournament23473",*/ "/tournament24179"}; //Идет и добавлено
+        
+        String[] LeagueChampion = new String[] {"/division1008", "/division1009"};
+        
+        //parserExider();
+        parserLeague(LeagueChampion);
+    }
+    private static void parserLeague(String[] ids) throws SQLException, IOException {
+        //parserTournamentTable(ids);
         parserTournamentStatistic(ids);
-        parserMatches(ids);
-//        updateUrlSquad();
-//        parserResultActions("/tournament19160", false);
-//        parserAllMatch(TYPE_ACTION_RESULT);
-//        parserTournamentSquads("/tournament18741");
-//          parserTournamentSquadsAll();
-//        parserTeamSquad();
-//           parserTeam();
+        //parserMatches(ids);
+    }
+    
+    private static void parserExider() throws IOException, SQLException {
+        MatchesParser parser = new MatchesParser();
+        parser.parserExider();
     }
     
     private static void parserMatches(String[] ids) throws IOException, SQLException {

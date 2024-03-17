@@ -24,6 +24,7 @@ public class TournamentTableParser {
     private final Connection dbConnect;
     
     class TournamentTable {
+        String groupName;
         int position;
         String teamImage;
         String teamUrl;
@@ -40,7 +41,7 @@ public class TournamentTableParser {
 
         @Override
         public String toString() {
-            return "TotnamnetTable{" + "position=" + position + ", teamImage=" + teamImage + ", teamUrl=" + teamUrl + ", teamName=" + teamName + ", games=" + games + ", wins=" + wins + ", draws=" + draws + ", losses=" + losses + ", goals_scored=" + goals_scored + ", goals_conceded=" + goals_conceded + ", goals_diferences=" + goals_diferences + ", points=" + points + "}\n";
+            return "TournamentTable{" + "groupName=" + groupName + ", position=" + position + ", teamImage=" + teamImage + ", teamUrl=" + teamUrl + ", teamName=" + teamName + ", games=" + games + ", wins=" + wins + ", draws=" + draws + ", losses=" + losses + ", goals_scored=" + goals_scored + ", goals_conceded=" + goals_conceded + ", goals_diferences=" + goals_diferences + ", points=" + points + ", colorPosition=" + colorPosition + "}\n";
         }
     }
 
@@ -62,6 +63,90 @@ public class TournamentTableParser {
         return colorHex;
     }
     
+    ArrayList<TournamentTable> parserTournamentGroupTable(String tournamentUrl) throws IOException {
+        Document doc = SSLHelper.getConnection(tournamentUrl).get();
+        Element tbody = doc.selectFirst("tbody");
+        if (tbody == null) throw new NullPointerException("tbody not find");
+        ArrayList<TournamentTable> tableList = new ArrayList<>(); 
+        Elements trs = tbody.select("tr");
+        String groupName = "";
+        for(Element tr : trs) {
+            Elements tds = tr.select("td");
+            if (tds.size() == 1) {
+                groupName = tds.get(0).text().replace("Шахматка", "").trim();
+                continue;
+            }
+            TournamentTable table = getRow(tr, groupName);
+            tableList.add(table);
+        }
+        System.out.print(tableList);
+        return tableList;
+    }
+    
+    private TournamentTable getRow(Element tr, String groupName) {
+        TournamentTable table = new TournamentTable();
+        table.groupName = groupName;
+        table.colorPosition = getColorPosition(tr.attr("class"));
+        Elements tds = tr.select("td");
+        int index = 0;
+        for(Element td : tds) {
+            switch(index) {
+                case 0:
+                    //Позиция
+                    String position = td.text();
+                    table.position = ParserLflHelper.parseInt(position);
+                    break;
+                case 1:
+                    //Фотка
+                    String image = td.selectFirst("img").attr("src");
+                    table.teamImage = image;
+                    break;
+                case 2:
+                    //Название команды
+                    Element a = td.selectFirst("a");
+                    String url = a.attr("href");
+                    String name = a.text();
+                    table.teamUrl = url;
+                    table.teamName = name;
+                    break;
+                case 3:
+                    //Игры
+                    table.games = ParserLflHelper.parseInt(td.text());
+                    break;
+                case 4:
+                    //Победа
+                    table.wins = ParserLflHelper.parseInt(td.text());
+                    break;
+                case 5:
+                    table.draws = ParserLflHelper.parseInt(td.text());
+                    //Ничьи
+                    break;
+                case 6:
+                    table.losses = ParserLflHelper.parseInt(td.text());
+                    //Поражения
+                    break;
+                case 7:
+                    table.goals_scored = ParserLflHelper.parseInt(td.text());
+                    //Забитые
+                    break;
+                case 8:
+                    table.goals_conceded = ParserLflHelper.parseInt(td.text());
+                    //Пропущеные
+                    break;
+                case 9:
+                    table.goals_diferences = ParserLflHelper.parseInt(td.text());
+                    //Разница
+                    break;
+                case 10:
+                    table.points = ParserLflHelper.parseInt(td.text());
+                    //Очки
+                    break;
+            }
+            index++;
+        }
+        return table;
+    }
+    
     ArrayList<TournamentTable> parserTournamentTable(String tournamentUrl) throws IOException {
 //        File input = new File("D:\\Загрузки\\lfl.ru.html");
 //        Document doc = Jsoup.parse(input, "Windows-1251");
@@ -74,65 +159,7 @@ public class TournamentTableParser {
             if(tr.text().contains("Шахматка")) {
                 return;
             }
-            TournamentTable table = new TournamentTable();
-            table.colorPosition = getColorPosition(tr.attr("class"));
-            Elements tds = tr.select("td");
-            int index = 0;
-            for(Element td : tds) {
-                switch(index) {
-                    case 0:
-                        //Позиция
-                        String position = td.text();
-                        table.position = ParserLflHelper.parseInt(position);
-                        break;
-                    case 1:
-                        //Фотка
-                        String image = td.selectFirst("img").attr("src");
-                        table.teamImage = image;
-                        break;
-                    case 2:
-                        //Название команды
-                        Element a = td.selectFirst("a");
-                        String url = a.attr("href");
-                        String name = a.text();
-                        table.teamUrl = url;
-                        table.teamName = name;
-                        break;
-                    case 3:
-                        //Игры
-                        table.games = ParserLflHelper.parseInt(td.text());
-                        break;
-                    case 4:
-                        //Победа
-                        table.wins = ParserLflHelper.parseInt(td.text());
-                        break;
-                    case 5:
-                        table.draws = ParserLflHelper.parseInt(td.text());
-                        //Ничьи
-                        break;
-                    case 6:
-                        table.losses = ParserLflHelper.parseInt(td.text());
-                        //Поражения
-                        break;
-                    case 7:
-                        table.goals_scored = ParserLflHelper.parseInt(td.text());
-                        //Забитые
-                        break;
-                    case 8:
-                        table.goals_conceded = ParserLflHelper.parseInt(td.text());
-                        //Пропущеные
-                        break;
-                    case 9:
-                        table.goals_diferences = ParserLflHelper.parseInt(td.text());
-                        //Разница
-                        break;
-                    case 10:
-                        table.points = ParserLflHelper.parseInt(td.text());
-                        //Очки
-                        break;
-                }
-                index++;
-            }
+            TournamentTable table = getRow(tr, "");
             tableList.add(table);
         });
         System.out.print(tableList);
@@ -140,21 +167,40 @@ public class TournamentTableParser {
     }
     
     void inserTableInDB(String tournamentUrl, String tournamentId) throws IOException, SQLException {
-        ArrayList<TournamentTable> tableList = parserTournamentTable(tournamentUrl);
-        clearTable(tournamentId);
-        addTable(tournamentId, tableList);
+        ArrayList<TournamentTable> tableList;
+        boolean isGroupTournament;
+        if(tournamentId.contains("1008") || tournamentId.contains("1009")) {
+            tableList = parserTournamentGroupTable(tournamentUrl);
+            isGroupTournament = true;
+        } else {
+            tableList = parserTournamentTable(tournamentUrl);
+            isGroupTournament = false;
+        }
+        clearTable(tournamentId, isGroupTournament);
+        addTable(tournamentId, tableList, isGroupTournament);
     }
     
-    private void clearTable(String tournamentUrl) throws SQLException {
-        String sql = "delete from tournament_table where tournament_url = ?";
+    private void clearTable(String tournamentUrl, boolean isGroupTournament) throws SQLException {
+        String sql;
+        if(isGroupTournament) {
+            sql = "delete from tournament_table_group where tournament_url = ?";
+        } else {
+            sql = "delete from tournament_table where tournament_url = ?";
+        }
         PreparedStatement prStatement = dbConnect.prepareStatement(sql);
         prStatement.setString(1, tournamentUrl);
         prStatement.executeUpdate();
     }
     
-    private void addTable(String tournamentUrl, ArrayList<TournamentTable> tableList) throws SQLException {
-        String sql = "INSERT INTO tournament_table (tournament_url, position, team_image, team_url, team_name, games, wins, draws, losses, goals_scored, goals_conceded, goals_difference, points, color_position)"
+    private void addTable(String tournamentUrl, ArrayList<TournamentTable> tableList, boolean isGroupTournament) throws SQLException {
+        String sql;
+        if(isGroupTournament) {
+            sql = "INSERT INTO tournament_table_group (tournament_url, position, team_image, team_url, team_name, games, wins, draws, losses, goals_scored, goals_conceded, goals_difference, points, color_position, group_name)"
+                + "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        } else {
+             sql = "INSERT INTO tournament_table (tournament_url, position, team_image, team_url, team_name, games, wins, draws, losses, goals_scored, goals_conceded, goals_difference, points, color_position)"
                 + "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        }
         for(TournamentTable tableRow : tableList) {
             PreparedStatement prStatement = dbConnect.prepareStatement(sql);
             prStatement.setString(1, tournamentUrl);
@@ -171,6 +217,9 @@ public class TournamentTableParser {
             prStatement.setInt(12, tableRow.goals_diferences);
             prStatement.setInt(13, tableRow.points);
             prStatement.setString(14, tableRow.colorPosition);
+            if(isGroupTournament) {
+                prStatement.setString(15, tableRow.groupName);
+            }
             prStatement.executeUpdate();
         }
     }
