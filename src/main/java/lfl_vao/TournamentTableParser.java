@@ -152,7 +152,14 @@ public class TournamentTableParser {
 //        Document doc = Jsoup.parse(input, "Windows-1251");
         Document doc = SSLHelper.getConnection(tournamentUrl).get();
         Element tbody = doc.selectFirst("tbody");
-        if (tbody == null) throw new NullPointerException("tbody not find");
+        if (tbody == null) {
+            System.out.print("!!!!!!!!!!!!!!!!");
+            System.out.print("!!!!!!!!!!!!!!!!");
+            System.out.print("Table no fount " + tournamentUrl);
+            System.out.print("!!!!!!!!!!!!!!!!");
+            System.out.print("!!!!!!!!!!!!!!!!");
+            return new ArrayList<>();
+        }
         ArrayList<TournamentTable> tableList = new ArrayList<>(); 
         Elements trs = tbody.select("tr");
         trs.forEach(tr -> {
@@ -169,7 +176,7 @@ public class TournamentTableParser {
     void inserTableInDB(String tournamentUrl, String tournamentId) throws IOException, SQLException {
         ArrayList<TournamentTable> tableList;
         boolean isGroupTournament;
-        if(tournamentId.contains("1008") || tournamentId.contains("1009")) {
+        if(tournamentId.contains("1008") || tournamentId.contains("1009") || tournamentId.contains("995")) {
             tableList = parserTournamentGroupTable(tournamentUrl);
             isGroupTournament = true;
         } else {

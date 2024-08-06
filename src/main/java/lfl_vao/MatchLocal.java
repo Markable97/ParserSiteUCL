@@ -97,13 +97,18 @@ public class MatchLocal {
         
         Element score = tds.get(4);
         Element aPhoto = score.selectFirst("a.gallery-icon");
-        Element aVideo = score.selectFirst("a.video-icon.video-icon-3");
+        Element aVideo3 = score.selectFirst("a.video-icon.video-icon-3");
+        Element aVideo1 = score.selectFirst("a.video-icon.video-icon-1");
         if (aPhoto != null) {
             this.photoUrl = aPhoto.absUrl("href");
         }
-        if (aVideo != null) {
-            this.videoUrl = aVideo.absUrl("href");
+        if (aVideo3 != null) {
+            this.videoUrl = aVideo3.absUrl("href");
         }
+        if (aVideo1 != null) {
+            this.videoUrl = aVideo1.absUrl("href");
+        }
+        
         String[] scores = score.text().split(":");
         if(scores.length == 2) {
             this.goalsHome = scores[0].trim();

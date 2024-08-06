@@ -86,7 +86,7 @@ public class StatisticsParser {
         ArrayList<Statistic> statisctics = new ArrayList<>();
         Document doc = SSLHelper.getConnection(url).get();
         Element tbody = doc.selectFirst("tbody");
-        if (tbody == null) throw new NullPointerException("tbody not find");
+        if (tbody == null) return new ArrayList<>();
         Elements trs = tbody.select("tr");
         for(Element tr : trs) {
             Statistic statistic = new Statistic();
