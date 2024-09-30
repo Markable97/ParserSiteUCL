@@ -66,7 +66,7 @@ public class ParserLflVao {
         
         String[] SAO = new String[] {"/tournament23419", "/tournament23420", "/tournament23543", "/tournament23546", "/tournament23471", "/tournament23545"}; //Идет
         String[] SVAO = new String[] {"/tournament23459", "/tournament23561", "/tournament23547"}; //Идет и добавлено
-        String[] VAO = new String[] {"/division995" /*"/tournament23457", "/tournament23472", "/tournament23473", "/tournament24179"*/}; //Идет и добавлено
+        String[] VAO = new String[] {"/division995", "/tournament23457", "/tournament23472", "/tournament23473", "/tournament24179"}; //Идет и добавлено
         
         String[] LeagueChampion = new String[] {"/division1008", "/division1009"};
         

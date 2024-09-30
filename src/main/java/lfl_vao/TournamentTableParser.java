@@ -166,6 +166,9 @@ public class TournamentTableParser {
             if(tr.text().contains("Шахматка")) {
                 return;
             }
+            if(tr.text().contains(";")) {
+                return;
+            }
             TournamentTable table = getRow(tr, "");
             tableList.add(table);
         });
