@@ -57,25 +57,25 @@ public class ParserLflVao {
     
     public static void main(String[] args) throws IOException, SQLException, InterruptedException{
         //Сначала проверь для высшего дива как все парсится
-        String[] SZAO = new String[] {"/tournament23698", "/tournament23699", "/tournament23747", "/tournament23748", "/tournament23750", "/tournament23751"}; //Начало 17.02
+        // String[] SZAO = new String[] {"/tournament23698", "/tournament23699", "/tournament23747", "/tournament23748", "/tournament23750", "/tournament23751"}; //Начало 17.02
         
-        String[] UVAO = new String[] {"/tournament23560", "/tournament23563", "/tournament23582", "/tournament23583", "/tournament23620"};
-        String[] UAO = new String[] {"/tournament23909", "/tournament23910", "/tournament24180", "/tournament24181", "/tournament24201"};
-        String[] UZAO = new String[] {"/tournament23173", "/tournament23174", "/tournament23194"}; 
-        String[] ZAO = new String[] {"/tournament22934", "/tournament22935"}; //Начало 09.03
+        // String[] UVAO = new String[] {"/tournament23560", "/tournament23563", "/tournament23582", "/tournament23583", "/tournament23620"};
+        // String[] UAO = new String[] {"/tournament23909", "/tournament23910", "/tournament24180", "/tournament24181", "/tournament24201"};
+        // String[] UZAO = new String[] {"/tournament23173", "/tournament23174", "/tournament23194"}; 
+        // String[] ZAO = new String[] {"/tournament22934", "/tournament22935"}; //Начало 09.03
         
-        String[] SAO = new String[] {"/tournament23419", "/tournament23420", "/tournament23543", "/tournament23546", "/tournament23471", "/tournament23545"}; //Идет
-        String[] SVAO = new String[] {"/tournament23459", "/tournament23561", "/tournament23547"}; //Идет и добавлено
-        String[] VAO = new String[] {"/division995", "/tournament23457", "/tournament23472", "/tournament23473", "/tournament24179"}; //Идет и добавлено
+        // String[] SAO = new String[] {"/tournament23419", "/tournament23420", "/tournament23543", "/tournament23546", "/tournament23471", "/tournament23545"}; //Идет
+        // String[] SVAO = new String[] {"/tournament23459", "/tournament23561", "/tournament23547"}; 
+        String[] VAO = new String[] {/*"/division995",*/ "/tournament27995" , "/tournament27996", "/tournament27997",}; //Вышеи пока нет
         
-        String[] LeagueChampion = new String[] {"/division1008", "/division1009"};
+        //String[] LeagueChampion = new String[] {"/division1008", "/division1009"};
         
         //parserExider();
         parserLeague(VAO);
     }
     private static void parserLeague(String[] ids) throws SQLException, IOException {
-       parserTournamentTable(ids);
-       parserTournamentStatistic(ids);
+       //parserTournamentTable(ids);
+       //parserTournamentStatistic(ids);
        parserMatches(ids);
     }
     
@@ -108,7 +108,7 @@ public class ParserLflVao {
                 url = "https://lfl.ru/?ajax=1&method=tournament_stats_table&tournament_id=" + id.replace("/tournament", "");
             }
             parser.inserTableInDB(url, id);
-        }
+    }
     }
     
     private static void parserTournamentSquadsAll() throws IOException, InterruptedException{

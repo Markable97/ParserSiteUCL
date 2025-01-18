@@ -179,7 +179,7 @@ public class TournamentTableParser {
     void inserTableInDB(String tournamentUrl, String tournamentId) throws IOException, SQLException {
         ArrayList<TournamentTable> tableList;
         boolean isGroupTournament;
-        if(tournamentId.contains("1008") || tournamentId.contains("1009") || tournamentId.contains("995")) {
+        if(false) {
             tableList = parserTournamentGroupTable(tournamentUrl);
             isGroupTournament = true;
         } else {

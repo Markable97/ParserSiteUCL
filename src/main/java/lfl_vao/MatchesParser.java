@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -23,7 +24,7 @@ public class MatchesParser {
     public MatchesParser() {
         dbConnect = new DBConnection().connect;
     }
-
+    
     void parserExider() throws IOException, SQLException {
         Document doc = SSLHelper.getConnection("https://exider.org/").get();
         ArrayList<MatchLocal> calendar = new ArrayList<>();
@@ -68,11 +69,13 @@ public class MatchesParser {
                     System.out.println("Заголовок = " + title);
                     String[] titleSplit = title.split("-");
                     if(titleSplit.length != 2) {
-                        System.out.println("Ошибка пропускаем элемент, заголовок не состоит из нужной комбинаци дивизион - тур size = " + titleSplit.length);
-                        continue;
+                        System.out.println("Предупреждение! Отсутсвует тур");
                     }
                     String divisionName = titleSplit[0].trim();
-                    String tour = titleSplit[1].trim();
+                    String tour = "";
+                    if(titleSplit.length == 2) {
+                        tour = titleSplit[1].trim();
+                    }
                     Element table = li.selectFirst("table.on_main");
                     if(table == null) {
                         System.out.println("Ошибка пропускаем элемент, не нашелся тег table.on_mai");
@@ -118,15 +121,24 @@ public class MatchesParser {
             case "Первый дивизион": url = "/tournament23457"; break;
             case "Второй дивизион A": url = "/tournament23472"; break;
             case "Второй дивизион B": url = "/tournament23473"; break;
+            case "Кубок Востока": url = "/tournament24179"; break;
             default: url = null; break;
         }
         return url;
+    }
+    
+    private Boolean isVaoID(String id) {
+        String[] VAO = new String[] { "/tournament27995" , "/tournament27996", "/tournament27997"};
+        return Arrays.asList(VAO).contains(id);
     }
     
     void parser(String id) throws IOException, SQLException {
         String urlResult;
         String urlCalendar;
         boolean isDivision;
+        if (isVaoID(id)) {
+            updateVaoFromExider(id);
+        }
         if(id.contains("division")) {
             isDivision = true;
             urlResult = "https://lfl.ru/?ajax=1&method=tournament_resault_table&division_id=%s&limit=400";
@@ -179,6 +191,9 @@ public class MatchesParser {
         String sql = "delete from match_from_exider where id > 0";
         PreparedStatement ps = dbConnect.prepareStatement(sql);
         ps.execute();
+        sql = "update tournament_info set league_name = 'ЛФЛ ВАО' where tournament_url in ('/division995', '/tournament23457', '/tournament23472', '/tournament23473', '/tournament24179')";
+        ps = dbConnect.prepareStatement(sql);
+        ps.executeUpdate();
         sql = "insert into match_from_exider (tournament_url, date, stadium, tour, team_home, team_guest)"
                 + "values (?, ?, ?, ?, ?, ?)";
         for(MatchLocal m : matches) {
@@ -192,6 +207,13 @@ public class MatchesParser {
             ps.executeUpdate();
         }
         
+    }
+    
+    void updateVaoFromExider(String tournamentUrl) throws SQLException {
+        String sql = "update tournament_info set league_name = 'ЛФЛ Восток' where tournament_url = ?";
+        PreparedStatement ps = dbConnect.prepareStatement(sql);
+        ps.setString(1, tournamentUrl);
+        ps.executeUpdate();
     }
     
     void inserOrUpdateDB(ArrayList<MatchLocal> matches, String toutnamentUrl) throws SQLException {
