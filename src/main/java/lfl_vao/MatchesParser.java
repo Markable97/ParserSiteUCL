@@ -117,10 +117,10 @@ public class MatchesParser {
     private String getTournamentUrl(String divisionName) {
         String url;
         switch(divisionName) {
-            case "Высший дивизион": url = "/division995"; break;
-            case "Первый дивизион": url = "/tournament23457"; break;
-            case "Второй дивизион A": url = "/tournament23472"; break;
-            case "Второй дивизион B": url = "/tournament23473"; break;
+            case "Высший дивизион": url = "/division1074"; break;
+            case "Первый дивизион": url = "/tournament27995"; break;
+            case "Второй дивизион A": url = "/tournament27996"; break;
+            case "Второй дивизион B": url = "/tournament27997"; break;
             case "Кубок Востока": url = "/tournament24179"; break;
             default: url = null; break;
         }
@@ -128,7 +128,7 @@ public class MatchesParser {
     }
     
     private Boolean isVaoID(String id) {
-        String[] VAO = new String[] { "/tournament27995" , "/tournament27996", "/tournament27997"};
+        String[] VAO = new String[] { "/division1074", "/tournament27995" , "/tournament27996", "/tournament27997"};
         return Arrays.asList(VAO).contains(id);
     }
     
@@ -191,7 +191,7 @@ public class MatchesParser {
         String sql = "delete from match_from_exider where id > 0";
         PreparedStatement ps = dbConnect.prepareStatement(sql);
         ps.execute();
-        sql = "update tournament_info set league_name = 'ЛФЛ ВАО' where tournament_url in ('/division995', '/tournament23457', '/tournament23472', '/tournament23473', '/tournament24179')";
+        sql = "update tournament_info set league_name = 'ЛФЛ ВАО' where tournament_url in ('/division1074', '/tournament27995', '/tournament27996', '/tournament27997', '/tournament24179')";
         ps = dbConnect.prepareStatement(sql);
         ps.executeUpdate();
         sql = "insert into match_from_exider (tournament_url, date, stadium, tour, team_home, team_guest)"

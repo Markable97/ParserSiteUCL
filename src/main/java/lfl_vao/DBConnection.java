@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 public class DBConnection {
     String user = "root";
     String password = "7913194";
-    String url = "jdbc:mysql://127.0.0.1:3306/sport_community?useUnicode=true&serverTimezone=UTC&useSSL=true&verifyServerCertificate=false";
-    //String url = "jdbc:mysql://192.168.0.137:3306/sport_community";
+    //String url = "jdbc:mysql://127.0.0.1:3306/sport_community?useUnicode=true&serverTimezone=UTC&useSSL=true&verifyServerCertificate=false";
+    String url = "jdbc:mysql://192.168.0.137:3306/sport_community?useUnicode=true&serverTimezone=UTC&useSSL=true&verifyServerCertificate=false";
     Connection connect;
     
     public DBConnection(){

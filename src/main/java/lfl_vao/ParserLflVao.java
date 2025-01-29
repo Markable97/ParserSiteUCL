@@ -66,7 +66,7 @@ public class ParserLflVao {
         
         // String[] SAO = new String[] {"/tournament23419", "/tournament23420", "/tournament23543", "/tournament23546", "/tournament23471", "/tournament23545"}; //Идет
         // String[] SVAO = new String[] {"/tournament23459", "/tournament23561", "/tournament23547"}; 
-        String[] VAO = new String[] {/*"/division995",*/ "/tournament27995" , "/tournament27996", "/tournament27997",}; //Вышеи пока нет
+        String[] VAO = new String[] {"/division1074" ,/* "/tournament27995" , "/tournament27996", "/tournament27997",*/};
         
         //String[] LeagueChampion = new String[] {"/division1008", "/division1009"};
         
@@ -74,8 +74,8 @@ public class ParserLflVao {
         parserLeague(VAO);
     }
     private static void parserLeague(String[] ids) throws SQLException, IOException {
-       //parserTournamentTable(ids);
-       //parserTournamentStatistic(ids);
+       parserTournamentTable(ids);
+       parserTournamentStatistic(ids);
        parserMatches(ids);
     }
     
