@@ -27,7 +27,13 @@ public class ParserLflHelper {
     final static int TYPE_UNKNOWS = -1;
     
     static int parseInt(String text) {
-        return Integer.parseInt(text.trim());
+        int amount;
+        if (text.contains("-")) {
+            amount = 0;
+        } else {
+            amount = Integer.parseInt(text.trim());
+        }
+        return amount;
     }
     
     static int typeNextBlock(String tag, String textTag) {
