@@ -60,8 +60,8 @@ public class ParserLflVao {
         String[] SZAO = new String[] {"/division1075", "/tournament28076", "/tournament28077", "/tournament28078", "/tournament28079", "/tournament28080"};
         String[] UVAO = new String[] {"/tournament28091", "/tournament28092", "/tournament28119", "/tournament28120", "/tournament28180"};
         String[] UAO = new String[] {"/tournament28435", "/tournament28436", "/tournament28517", "/tournament28518", "/tournament28519"};
-        // String[] UZAO = new String[] {"/tournament23173", "/tournament23174", "/tournament23194"}; 
-        // String[] ZAO = new String[] {"/tournament22934", "/tournament22935"}; //Начало 09.03
+        String[] UZAO = new String[] {"/tournament28242", "/tournament28243", "/tournament28244"}; 
+        String[] ZAO = new String[] {"/tournament28240", "/tournament28241"};
         
         String[] SAO = new String[] {"/tournament27980", "/tournament27981", "/tournament27993", "/tournament27994", "/tournament28228", "/tournament28320"};
         String[] SVAO = new String[] {"/tournament28286", "/tournament28285", "/tournament28121", "/tournament28122"};
@@ -70,7 +70,7 @@ public class ParserLflVao {
         //String[] LeagueChampion = new String[] {"/division1008", "/division1009"};
         
         //parserExider();
-        parserLeague(VAO);
+        parserLeague(UZAO);
     }
     private static void parserLeague(String[] ids) throws SQLException, IOException {
        parserTournamentTable(ids);
